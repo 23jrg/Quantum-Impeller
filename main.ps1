@@ -1,3 +1,6 @@
+#Set Execution Policy Remote Signed (needed for the gui tools)
+set-executionpolicy remotesigned;a;
+
 #Guibased Tools
 invoke-expression 'cmd /c start powershell -Command {irm https://get.activated.win | iex}';
 invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
