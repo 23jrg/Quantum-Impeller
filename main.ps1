@@ -6,7 +6,7 @@ invoke-expression 'cmd /c start powershell -Command {irm https://get.activated.w
 invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
 
 #installs a program that keeps the computer from sleeping
-invoke-expression 'cmd /c start powershell -Command {winget install ZhornSoftware.Caffeine --source winget --force;Caffeine -activefor:15 -replace}';
+invoke-expression 'cmd /c start powershell -Command {winget install ZhornSoftware.Caffeine --source winget --force;[System.Environment]::GetEnvironmentVariable("Path","User");Caffeine -activefor:15 -replace}';
 
 #Refreshes the powershell path to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User") 
