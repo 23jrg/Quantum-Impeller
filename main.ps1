@@ -21,7 +21,7 @@ Caffeine -activefor:15 -replace;
 git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
 
 #Handy Windows updater
-git clone https://github.com/lzw29107/MediaCreationTool.bat;.\MediaCreationTool.bat\MediaCreationTool.bat;
+git clone https://github.com/23jrg/MediaCreationTool.bat
 
 #Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path Quantum-Impeller\qmr_settings.xml
