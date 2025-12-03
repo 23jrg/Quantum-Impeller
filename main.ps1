@@ -20,8 +20,13 @@ Caffeine -activefor:15 -replace;
 #Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
 git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
 
-#Handy Windows updater
-git clone https://github.com/23jrg/MediaCreationTool.bat;#.\MediaCreationTool.bat\MediaCreationTool.bat
+#Handy Windows updater gets placed on the desktop
+git clone https://github.com/23jrg/MediaCreationTool.bat;
+
+$WshShell = New-Object -COMObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
+$Shortcut.TargetPath = "$Home\MediaCreationTool.bat\MediaCreationTool.bat"
+$Shortcut.Save()
 
 #Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path Quantum-Impeller\qmr_settings.xml;
