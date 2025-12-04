@@ -33,3 +33,6 @@ reagentc.exe /setrecoverysettings /path Quantum-Impeller\qmr_settings.xml;
 
 #Set fast startup to disabled
 Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Power' -Name 'HiberbootEnabled' -Value 0
+
+#Disable location popups
+Set-ItemProperty -Path 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location' -Name 'ShowGlobalPrompts' -Value 0
