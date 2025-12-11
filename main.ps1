@@ -18,22 +18,25 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 Caffeine -activefor:15 -replace;
 
 #Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
-git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
+#git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
+git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
+schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
 #Windows Activator
-git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
+#git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
 #git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
+git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
 
 #Handy Windows updater gets placed on the desktop
-git clone https://github.com/23jrg/MediaCreationTool.bat;
+git clone https://github.com/23jrg/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
-$Shortcut.TargetPath = "$Home\MediaCreationTool.bat\MediaCreationTool.bat"
+$Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
 #Set Quick Machine Recovery on 24h2+ computers
-reagentc.exe /setrecoverysettings /path Quantum-Impeller\qmr_settings.xml;
+reagentc.exe /setrecoverysettings /path C:\23jrg\Quantum-Impeller\qmr_settings.xml;
 
 #Set fast startup to disabled
 reg add 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power' -v 'HiberbootEnabled' /t REG_DWORD -d 0 /f
