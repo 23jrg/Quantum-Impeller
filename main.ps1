@@ -2,7 +2,7 @@
 set-executionpolicy remotesigned;a;y;
 
 #Guibased Tools
-invoke-expression 'cmd /c start powershell -Command {irm https://get.activated.win | iex}';
+#invoke-expression 'cmd /c start powershell -Command {irm https://get.activated.win | iex}';
 invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
 
 #Refreshes the powershell path to use winget
@@ -19,6 +19,9 @@ Caffeine -activefor:15 -replace;
 
 #Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
 git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
+
+#Windows Activator
+git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
 
 #Handy Windows updater gets placed on the desktop
 git clone https://github.com/23jrg/MediaCreationTool.bat;
