@@ -21,7 +21,8 @@ Caffeine -activefor:15 -replace;
 git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
 
 #Windows Activator
-git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
+git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
+#git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 #Handy Windows updater gets placed on the desktop
 git clone https://github.com/23jrg/MediaCreationTool.bat;
