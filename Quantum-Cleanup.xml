@@ -40,8 +40,9 @@
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments>"C:\23jrg\Quantum-Impeller\Quantum-Cleanup.ps1"</Arguments>
+      <Arguments>"C:\Program Files\Quantum-Cleanup.ps1"</Arguments>
     </Exec>
   </Actions>
 
 </Task>
+
