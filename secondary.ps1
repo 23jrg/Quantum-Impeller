@@ -21,7 +21,7 @@ powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpP
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 #Handy Windows updater gets placed on the desktop
-git clone https://github.com/23jrg/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
+git clone https://github.com/lzw29107/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
