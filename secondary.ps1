@@ -11,8 +11,22 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 #installs a program that keeps the computer from sleeping
 winget install ZhornSoftware.Caffeine --source winget --force;
 
+$WshShell = New-Object -COMObject WScript.Shell
+$CaffeineShortcut = $WshShell.CreateShortcut("$Home\desktop\caffeine.lnk")
+$CaffeineShortcut.Arguments = "-activefor:15 -replace"
+$CaffeineShortcut.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe\caffeine64.exe"
+$CaffeineShortcut.Save()
+
 #Refreshes the powershell path to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
+
+#Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
+git clone https://github.com/23jrg/Kick-Inactive-Users AppData\Local\Temp\KIU
+
+$WshShell = New-Object -COMObject WScript.Shell
+$LoiaShortcut = $WshShell.CreateShortcut("$Home\desktop\Install_LogOffInactiveAccounts.lnk")
+$LoiaShortcut.TargetPath = "$Home\AppData\Local\Temp\KIU\setup.bat"
+$LoiaShortcut.Save()
 
 #Windows Activator, the first line makes an exclusion in defender for the working directory because microsoft doesn't like MAS
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
