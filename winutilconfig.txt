@@ -22,6 +22,5 @@
     "WPFToggleDarkMode",
     "WPFToggleTaskbarAlignment",
     "WPFToggleNumLock",
-    "WPFToggleHiddenFiles",
-    "WPFToggleTaskbarAlignment"
+    "WPFToggleHiddenFiles"
 ]
