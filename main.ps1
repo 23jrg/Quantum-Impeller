@@ -1,9 +1,8 @@
 #Set Execution Policy Remote Signed (needed for the gui tools)
 set-executionpolicy remotesigned;a;y;
 
-#Guibased Tools
-#invoke-expression 'cmd /c start powershell -Command {irm https://get.activated.win | iex}';
-invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
+#Automatic debloat then launches the Guibased Tools
+invoke-expression 'cmd /c start powershell -Command {iex "& { $(irm https://christitus.com/win) } -Config C:\23jrg\Quantum-Impeller\winutilconfig.json"}';
 
 #Refreshes the powershell path to use winget
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
