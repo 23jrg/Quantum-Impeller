@@ -29,7 +29,7 @@ $LoiaShortcut.TargetPath = "$Home\AppData\Local\Temp\KIU\setup.bat"
 $LoiaShortcut.Save()
 
 #Windows Activator, the first line makes an exclusion in defender for the working directory because microsoft doesn't like MAS
-powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
+#powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 #git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
 #git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
