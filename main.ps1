@@ -3,7 +3,7 @@ set-executionpolicy remotesigned;a;y;
 
 #Automatic debloat then launches the Guibased Tools
 #invoke-expression 'cmd /c start powershell -Command {iex "& { $(irm https://christitus.com/win) } -Config C:\23jrg\Quantum-Impeller\winutilconfig.txt"}';
-invoke-expression 'cmd /c start powershell -Command {iex "& { $(irm https://christitus.com/win) }}';
+invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
 
 
 #Refreshes the powershell path to use winget
