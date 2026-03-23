@@ -4,7 +4,14 @@
 
 Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate;Install-WindowsUpdate -AcceptAll
 
-Remove-Item -Path "C:\23jrg" -Force -Recurse; winget uninstall git.git --accept-source-agreements --all --silent --force --nowarn;schtasks.exe /delete /f /TN Quantum-Cleanup;schtasks.exe /delete /f /TN Quantum-Clipper;
+winget uninstall git.git --accept-source-agreements --all --silent --force --nowarn;schtasks.exe /delete /f /TN Quantum-Clipper;
+
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+
+Remove-Item -Path "C:\23jrg" -Force -Recurse; 
+
+schtasks.exe /delete /f /TN Quantum-Cleanup;
 #Remove-MpPreference -ExclusionPath "C:\23jrg";
 Remove-Item $PSCommandPath -Force
 
