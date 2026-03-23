@@ -13,7 +13,7 @@
       </Repetition>
       <Enabled>true</Enabled>
       <Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="System"&gt;&lt;Select Path="System"&gt;*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and EventID=566]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>
-      <Delay>PT5M</Delay>
+      <Delay>PT1M</Delay>
     </EventTrigger>
   </Triggers>
   <Principals>
