@@ -7,10 +7,6 @@
   </RegistrationInfo>
   <Triggers>
     <EventTrigger>
-      <Repetition>
-        <Interval>PT24H</Interval>
-        <StopAtDurationEnd>false</StopAtDurationEnd>
-      </Repetition>
       <Enabled>true</Enabled>
       <Subscription>&lt;QueryList&gt;&lt;Query Id="0" Path="System"&gt;&lt;Select Path="System"&gt;*[System[Provider[@Name='Microsoft-Windows-Kernel-Power'] and EventID=566]]&lt;/Select&gt;&lt;/Query&gt;&lt;/QueryList&gt;</Subscription>
     </EventTrigger>
