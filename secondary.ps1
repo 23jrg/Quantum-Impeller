@@ -5,6 +5,8 @@ set-executionpolicy remotesigned;a;y;
 #invoke-expression 'cmd /c start powershell -Command {irm https://get.activated.win | iex}';
 invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
 
+invoke-expression 'cmd /c start powershell -Command {C:\23jrg\Quantum-Impeller\quser.bat}'
+
 #Refreshes the powershell path to use winget
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
