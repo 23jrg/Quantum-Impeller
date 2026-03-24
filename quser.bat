@@ -1,5 +1,5 @@
 @echo off
-set OUTPUT=session_id.txt
+set OUTPUT=C:\23jrg\Quantum-Impeller\session_id.txt
 
 > %OUTPUT% (
     for /f "skip=1 tokens=2,3" %%A in ('quser') do (
@@ -12,4 +12,4 @@ set OUTPUT=session_id.txt
 )
 
 echo Session ID(s) saved to %OUTPUT%
-TIMEOUT /T 10
+TIMEOUT /T 3
