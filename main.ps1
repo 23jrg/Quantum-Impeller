@@ -60,5 +60,5 @@ git clone https://github.com/ChrisTitusTech/winutil c:\23jrg\Winutil
 
 #Cleans up leftovers on next startup
 schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Cleanup.xml' /tn Quantum-Cleanup;
-schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Clipper.xml' /tn Quantum-Clipper;
+#schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Clipper.xml' /tn Quantum-Clipper;
 Move-Item -Path "C:\23jrg\Quantum-Impeller\Quantum-Cleanup.ps1" -Destination "C:\Program Files\"
