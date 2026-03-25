@@ -2,7 +2,7 @@
 
 . C:\23jrg\Winutil\functions\public\Invoke-WPFSystemRepair.ps1; Invoke-WPFSystemRepair
 
-Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate;Install-WindowsUpdate -AcceptAll
+Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate;Get-WindowsUpdate -Install -AcceptAll -IgnoreReboot
 
 winget uninstall git.git --accept-source-agreements --all --silent --force --nowarn;#schtasks.exe /delete /f /TN Quantum-Clipper;
 
