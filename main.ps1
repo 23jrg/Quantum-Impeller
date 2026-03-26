@@ -19,8 +19,6 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 #Actives Caffeine, keeping the computer on for 15 mins while we work, sets computer to remain on for 15 mins after we sign in
 Caffeine -activefor:15 -replace;
 
-C:\Users\jgraham\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe
-
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
 $CaffeineShortcut.Arguments = "-activefor:15 -replace"
