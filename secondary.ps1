@@ -17,7 +17,7 @@ winget install ZhornSoftware.Caffeine --source winget --force;
 Caffeine -activefor:5 -replace;
 
 $WshShell = New-Object -COMObject WScript.Shell
-$CaffeineShortcut = $WshShell.CreateShortcut("$Home\desktop\caffeine.lnk")
+$CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
 $CaffeineShortcut.Arguments = "-activefor:5 -replace"
 $CaffeineShortcut.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe\caffeine64.exe"
 $CaffeineShortcut.Save()
