@@ -55,6 +55,11 @@ reg add 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Pow
 #Disable location popups
 reg add 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location' -v 'ShowGlobalPrompts' /t REG_DWORD -d 0 /f
 
+#Disable Resume
+taskkill /IM CrossDeviceResume.exe
+reg add "HKLM\SOFTWARE\Microsoft\PolicyManager\default\Connectivity\DisableCrossDeviceResume" /v "value" /t REG_DWORD /d "1" /f
+Get-AppxPackage *Microsoft.CrossDeviceExperienceHost* | Remove-AppxPackage
+
 #Grabs some functions to be run on cleanup
 git clone https://github.com/ChrisTitusTech/winutil c:\23jrg\Winutil
 
