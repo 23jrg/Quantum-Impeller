@@ -14,9 +14,11 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 winget install ZhornSoftware.Caffeine --source winget --force;
 
 #Sets Caffeine to  keep the computer awake for 5 minutes every time the runner logs in
+Caffeine -activefor:5 -replace;
+
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\desktop\caffeine.lnk")
-$CaffeineShortcut.Arguments = "-activefor:15 -replace"
+$CaffeineShortcut.Arguments = "-activefor:5 -replace"
 $CaffeineShortcut.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe\caffeine64.exe"
 $CaffeineShortcut.Save()
 
