@@ -44,6 +44,16 @@ $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
+#Deployment Emailer gets placed on the Desktop
+Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
+Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
+
+
+$WshShell = New-Object -COMObject WScript.Shell
+$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Send_Deployment_Email.lnk")
+$Shortcut.TargetPath = "C:\23jrg\SendEmail.bat"
+$Shortcut.Save()
+
 #Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path C:\23jrg\Quantum-Impeller\qmr_settings.xml;
 
