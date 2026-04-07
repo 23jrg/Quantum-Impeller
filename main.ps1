@@ -13,11 +13,17 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 #installs a program that keeps the computer from sleeping and then sets it to keep awake for 15 mins
 winget install ZhornSoftware.Caffeine --source winget --force;
 
+#installs a tiling manager
+winget install GlazeWM --source winget --force;
+
 #Refreshes the powershell path to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
 #Actives Caffeine, keeping the computer on for 15 mins while we work, sets computer to remain on for 15 mins after we sign in
 Caffeine -activefor:15 -replace;
+
+#Activates the tiling manager
+GlazeWM
 
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
