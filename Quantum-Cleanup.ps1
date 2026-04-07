@@ -6,6 +6,8 @@ Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate -Install -AcceptAll -Ign
 
 winget uninstall git.git --accept-source-agreements --all --silent --force --nowarn;#schtasks.exe /delete /f /TN Quantum-Clipper;
 
+winget uninstall GlazeWM --accept-source-agreements --all --silent --force --nowarn;
+
 logoff (get-content "C:\23jrg\Quantum-Impeller\session_id.txt");
 
 $ErrorActionPreference = 'Stop'
