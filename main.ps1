@@ -14,7 +14,7 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 winget install ZhornSoftware.Caffeine --source winget --force;
 
 #installs a tiling manager
-winget install GlazeWM --source winget --force;
+#winget install GlazeWM --source winget --force;
 
 #Refreshes the powershell path to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
@@ -23,7 +23,7 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 Caffeine -activefor:15 -replace;
 
 #Activates the tiling manager
-GlazeWM
+#GlazeWM
 
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
