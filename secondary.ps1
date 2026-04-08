@@ -2,10 +2,10 @@
 set-executionpolicy remotesigned;a;y;
 
 #Guibased Tools
-invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
 
 #Makes a .txt with the ID of the runner who ran this script (this is used later for cleanup)
-invoke-expression 'cmd /c start powershell -Command {C:\23jrg\Quantum-Impeller\quser.bat}'
+C:\23jrg\Quantum-Impeller\quser.bat
 
 #Refreshes the powershell path to use winget
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
