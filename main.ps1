@@ -24,15 +24,21 @@ Invoke-WebRequest -Uri $url2 -OutFile $localPath2
 
 # 2.5 Set the lockscreen wallpaper
 # Define the registry path and the image location
-$lockregKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
+$lockregKey = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
+$cspPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
 
 # Create the registry key if it does not exist
 if (!(Test-Path $regKey)) {
     New-Item -Path $lockregKey -Force | Out-Null
 }
+if (!(Test-Path $cspPath)) {
+    New-Item -Path $cspPath -Force | Out-Null
+}
 
 # Set the LockScreenImage property
 Set-ItemProperty -Path $lockregKey -Name 'LockScreenImage' -Value $localPath2
+Set-ItemProperty -Path $cspPath -Name "LockScreenImagePath" -Value $localPath2
+Set-ItemProperty -Path $cspPath -Name "LockScreenImageStatus" -Value 1
 
 
 # 3. Define the C# code to call the Windows API for an instant update
