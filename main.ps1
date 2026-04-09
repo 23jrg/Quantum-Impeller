@@ -10,6 +10,9 @@ C:\23jrg\Quantum-Impeller\quser.bat
 #Profile Customization
 if ($env:USERNAME -eq "jgraham" || "Administrator" || "CISTECH") {
 
+$Host.UI.RawUI.BackgroundColor = "Black"
+$Host.UI.RawUI.ForegroundColor = "DarkYellow"
+
 # 1. Define the online image URL and local save path
 $url = "https://images4.alphacoders.com/101/1014815.png"
 $localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
