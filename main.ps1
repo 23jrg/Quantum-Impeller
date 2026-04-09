@@ -62,7 +62,7 @@ $personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Acc
 Set-ItemProperty -Path $personalizePath -Name "AccentColorMenu" -Value $yellowHex
 
 #Unpin everything from the taskbar
-$appsToUnpin = @("Microsoft Store", "Mail", "Calculator", "Microsoft Edge", "Copilot")
+$appsToUnpin = @("Microsoft Store", "Mail", "Calculator", "Microsoft Edge", "Copilot", "Microsoft 365 Copilot", "Outlook")
 $shell = New-Object -Com Shell.Application
 $taskbarItems = $shell.NameSpace("shell:::{4234d49b-0245-4df3-b780-3893943456e1}").Items()
 foreach ($appname in $appsToUnpin) {
