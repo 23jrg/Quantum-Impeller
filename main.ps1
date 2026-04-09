@@ -82,6 +82,9 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 #Hide Searchbar
 Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search" -Name "SearchboxTaskbarMode" -Value 0 -Type DWord -Force
 
+#Kill onedrive
+taskkill /f /im OneDrive.exe
+
 # Refresh the explorer process to apply changes without logging out
 Stop-Process -Name explorer -Force
     
