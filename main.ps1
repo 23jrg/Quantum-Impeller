@@ -45,7 +45,7 @@ Set-ItemProperty -Path $RegKeyPath -Name "SystemUsesLightTheme" -Value 0 -Type D
 Write-Host "Dark Mode Set Successfully"
 
 # Define the Yellow accent color in hex (AABBGGRR format for registry)
-$yellowHex = 0xff00ffff 
+$yellowHex = 0xFF009AC4
 
 # Update Registry for Personalization Colors
 $registryPath = "HKCU:\Software\Microsoft\Windows\DWM"
