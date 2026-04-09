@@ -7,6 +7,57 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\w
 C:\23jrg\Quantum-Impeller\quser.bat
 #invoke-expression 'cmd /c start powershell -Command {C:\23jrg\Quantum-Impeller\quser.bat}';
 
+#Profile Customization
+if ($env:USERNAME -eq "jgraham" || "Administrator" || "CISTECH") {
+
+# 1. Define the online image URL and local save path
+$url = "https://images4.alphacoders.com/101/1014815.png"
+$localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
+
+# 2. Download the image from the web
+Invoke-WebRequest -Uri $url -OutFile $localPath
+
+# 3. Define the C# code to call the Windows API for an instant update
+$code = @"
+using System;
+using System.Runtime.InteropServices;
+public class Wallpaper {
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
+}
+"@
+
+# 4. Add the type and apply the wallpaper
+Add-Type -TypeDefinition $code -Language CSharp
+[Wallpaper]::SystemParametersInfo(20, 0, $localPath, 3)
+
+$RegKeyPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
+
+# Set Apps to Dark
+Set-ItemProperty -Path $RegKeyPath -Name "AppsUseLightTheme" -Value 0 -Type Dword -Force
+
+# Set System to Dark
+Set-ItemProperty -Path $RegKeyPath -Name "SystemUsesLightTheme" -Value 0 -Type Dword -Force
+
+Write-Host "Dark Mode Set Successfully"
+
+# Define the Yellow accent color in hex (AABBGGRR format for registry)
+$yellowHex = 0xff00ffff 
+
+# Update Registry for Personalization Colors
+$registryPath = "HKCU:\Software\Microsoft\Windows\DWM"
+Set-ItemProperty -Path $registryPath -Name "AccentColor" -Value $yellowHex
+Set-ItemProperty -Path $registryPath -Name "ColorPrevalence" -Value 1
+
+# Update User Personalization for the "Yellow" theme color
+$personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent"
+Set-ItemProperty -Path $personalizePath -Name "AccentColorMenu" -Value $yellowHex
+
+# Refresh the explorer process to apply changes without logging out
+Stop-Process -Name explorer -Force
+    
+} 
+
 #Refreshes the powershell path to use winget
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
