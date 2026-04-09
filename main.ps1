@@ -61,6 +61,27 @@ Set-ItemProperty -Path $registryPath -Name "ColorPrevalence" -Value 1
 $personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent"
 Set-ItemProperty -Path $personalizePath -Name "AccentColorMenu" -Value $yellowHex
 
+#Unpin everything from the taskbar
+$appsToUnpin = @("Microsoft Store", "Mail", "Calculator", "Microsoft Edge", "Copilot")
+$shell = New-Object -Com Shell.Application
+$taskbarItems = $shell.NameSpace("shell:::{4234d49b-0245-4df3-b780-3893943456e1}").Items()
+foreach ($appname in $appsToUnpin) {
+    $item = $taskbarItems | Where-Object { $_.Name -eq $appname }
+    if ($item) {
+        $item.Verbs() | Where-Object { $_.Name.Replace("&", "") -match "Unpin from taskbar" } | ForEach-Object { $_.DoIt() }
+        Write-Host "Unpinned: $appname"
+    }
+}
+
+#Turn off taskview
+Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowTaskViewButton" -Value 0
+
+#Hide Widgets
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0
+
+#Hide Searchbar
+Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search" -Name "SearchboxTaskbarMode" -Value 0 -Type DWord -Force
+
 # Refresh the explorer process to apply changes without logging out
 Stop-Process -Name explorer -Force
     
