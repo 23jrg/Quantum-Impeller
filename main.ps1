@@ -15,10 +15,25 @@ $Host.UI.RawUI.ForegroundColor = "DarkYellow"
 
 # 1. Define the online image URL and local save path
 $url = "https://images4.alphacoders.com/101/1014815.png"
+$url2 = "https://i.redd.it/weyland-yutani-login-screens-for-you-edited-from-u-alx-v0-pt22fk0f32re1.png?width=1080&crop=smart&auto=webp&s=d8bd6fee835b006bae3cb440b4c7d4f2ad65fd74"
 $localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
-
+$localPath2 = "$env:USERPROFILE\Pictures\online_lockscreenwallpaper.jpg"
 # 2. Download the image from the web
 Invoke-WebRequest -Uri $url -OutFile $localPath
+Invoke-WebRequest -Uri $url2 -OutFile $localPath2
+
+# 2.5 Set the lockscreen wallpaper
+# Define the registry path and the image location
+$lockregKey = 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
+
+# Create the registry key if it does not exist
+if (!(Test-Path $regKey)) {
+    New-Item -Path $lockregKey -Force | Out-Null
+}
+
+# Set the LockScreenImage property
+Set-ItemProperty -Path $lockregKey -Name 'LockScreenImage' -Value $localPath2
+
 
 # 3. Define the C# code to call the Windows API for an instant update
 $code = @"
