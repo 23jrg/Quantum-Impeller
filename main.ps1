@@ -24,7 +24,6 @@ Invoke-WebRequest -Uri $url2 -OutFile $localPath2
 
 # 2.5 Set the lockscreen wallpaper
 # Define the registry path and the image location
-$lockregKey = 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\Personalization'
 $cspPath = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP"
 
 # Create the registry key if it does not exist
@@ -36,6 +35,7 @@ if (!(Test-Path $cspPath)) {
 }
 
 # Set the LockScreenImage property
+red add "HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\Personalization"
 Set-ItemProperty -Path $lockregKey -Name 'LockScreenImage' -Value $localPath2
 Set-ItemProperty -Path $cspPath -Name "LockScreenImagePath" -Value $localPath2
 Set-ItemProperty -Path $cspPath -Name "LockScreenImageStatus" -Value 1
