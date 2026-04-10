@@ -8,7 +8,7 @@ C:\23jrg\Quantum-Impeller\quser.bat
 #invoke-expression 'cmd /c start powershell -Command {C:\23jrg\Quantum-Impeller\quser.bat}';
 
 #Profile Customization
-if ($env:USERNAME -eq "jgraham" -or "Administrator" -or -"CISTECH") {
+if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
 
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "DarkYellow"
