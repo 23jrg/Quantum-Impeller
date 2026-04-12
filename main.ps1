@@ -2,7 +2,9 @@
 set-executionpolicy remotesigned;a;y;
 
 #Automatic debloat then launches the Guibased Tools
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
+
 #invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
 C:\23jrg\Quantum-Impeller\quser.bat
 #invoke-expression 'cmd /c start powershell -Command {C:\23jrg\Quantum-Impeller\quser.bat}';
