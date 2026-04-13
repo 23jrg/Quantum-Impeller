@@ -138,6 +138,14 @@ $Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
+#Anti-AI
+git clone https://github.com/zoicware/RemoveWindowsAI c:\23jrg\RemoveAI
+
+$WshShell = New-Object -COMObject WScript.Shell
+$Shortcut3 = $WshShell.CreateShortcut("$Home\Desktop\Remove-AI.lnk")
+$Shortcut3.TargetPath = "C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
+$Shortcut3.Save()
+
 #Deployment Emailer gets placed on the Desktop
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
