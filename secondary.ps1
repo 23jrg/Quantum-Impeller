@@ -1,7 +1,10 @@
 #Set Execution Policy Remote Signed (needed for the gui tools)
 set-executionpolicy remotesigned;a;y;
 
-#Guibased Tools
+#Automatic debloat then launches the Guibased Tools
+git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
 
 #Makes a .txt with the ID of the runner who ran this script (this is used later for cleanup)
