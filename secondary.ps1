@@ -7,6 +7,10 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
 
+#Deployment Emailer gets placed on the Desktop
+Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
+Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
+
 #Makes a .txt with the ID of the runner who ran this script (this is used later for cleanup)
 C:\23jrg\Quantum-Impeller\quser.bat
 
