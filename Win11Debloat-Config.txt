@@ -1,0 +1,203 @@
+﻿{
+    "Apps":  [
+                 "ACGMediaPlayer",
+                 "ActiproSoftwareLLC",
+                 "AdobeSystemsIncorporated.AdobePhotoshopExpress",
+                 "Microsoft.WindowsAlarms",
+                 "Amazon.com.Amazon",
+                 "Asphalt8Airborne",
+                 "AutodeskSketchBook",
+                 "Microsoft.BingFinance",
+                 "Microsoft.BingFoodAndDrink",
+                 "Microsoft.BingHealthAndFitness",
+                 "Microsoft.BingNews",
+                 "Microsoft.BingSports",
+                 "Microsoft.BingTranslator",
+                 "Microsoft.BingTravel",
+                 "Microsoft.BingWeather",
+                 "king.com.BubbleWitch3Saga",
+                 "CaesarsSlotsFreeCasino",
+                 "king.com.CandyCrushSaga",
+                 "king.com.CandyCrushSodaSaga",
+                 "Clipchamp.Clipchamp",
+                 "COOKINGFEVER",
+                 "Microsoft.Copilot",
+                 "Microsoft.Windows.AIHub",
+                 "Microsoft.549981C3F5F10",
+                 "CyberLinkMediaSuiteEssentials",
+                 "Microsoft.Windows.DevHome",
+                 "Disney",
+                 "DisneyMagicKingdoms",
+                 "DrawboardPDF",
+                 "Duolingo-LearnLanguagesforFree",
+                 "EclipseManager",
+                 "Facebook",
+                 "MicrosoftCorporationII.MicrosoftFamily",
+                 "FarmVille2CountryEscape",
+                 "Microsoft.WindowsFeedbackHub",
+                 "fitbit",
+                 "Flipboard",
+                 "Microsoft.Getstarted",
+                 "HiddenCity",
+                 "HULULLC.HULUPLUS",
+                 "iHeartRadio",
+                 "Instagram",
+                 "LinkedInforWindows",
+                 "MarchofEmpires",
+                 "Microsoft.Messaging",
+                 "Microsoft.MicrosoftJournal",
+                 "Microsoft.News",
+                 "Microsoft.PCManager",
+                 "Microsoft.Todos",
+                 "Microsoft.MixedReality.Portal",
+                 "Microsoft.ZuneVideo",
+                 "Netflix",
+                 "Microsoft.NetworkSpeedTest",
+                 "NYTCrossword",
+                 "Microsoft.MicrosoftOfficeHub",
+                 "OneCalendar",
+                 "Microsoft.OneConnect",
+                 "Microsoft.Office.OneNote",
+                 "PandoraMediaInc",
+                 "PhototasticCollage",
+                 "PicsArt-PhotoStudio",
+                 "Plex",
+                 "PolarrPhotoEditorAcademicEdition",
+                 "Microsoft.MicrosoftPowerBIForWindows",
+                 "AmazonVideo.PrimeVideo",
+                 "Microsoft.Print3D",
+                 "Royal Revolt",
+                 "Shazam",
+                 "Microsoft.SkypeApp",
+                 "SlingTV",
+                 "Microsoft.WindowsSoundRecorder",
+                 "Spotify",
+                 "Microsoft.MicrosoftStickyNotes",
+                 "Microsoft.Office.Sway",
+                 "TikTok",
+                 "TuneInRadio",
+                 "Twitter",
+                 "Viber",
+                 "Microsoft.WindowsMaps",
+                 "Wunderlist",
+                 "Microsoft.XboxApp",
+                 "XING"
+             ],
+    "Tweaks":  [
+                   {
+                       "Value":  true,
+                       "Name":  "DisableStoreSearchSuggestions"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableTelemetry"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableWidgets"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableLockscreenTips"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableAISvcAutoStart"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableStartPhoneLink"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableSearchHighlights"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "AddFoldersToThisPC"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableDVR"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableSuggestions"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "ShowKnownFileExt"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "ClearStart"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "EnableEndTask"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "ShowHiddenFolders"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableFastStartup"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableGameBarIntegration"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableCopilot"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableClickToDo"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableBing"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableSearchHistory"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableRecall"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableDragTray"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "ExplorerToThisPC"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableEdgeAds"
+                   }
+               ],
+    "Deployment":  [
+                       {
+                           "Value":  0,
+                           "Name":  "UserSelectionIndex"
+                       },
+                       {
+                           "Value":  0,
+                           "Name":  "AppRemovalScopeIndex"
+                       },
+                       {
+                           "Value":  true,
+                           "Name":  "CreateRestorePoint"
+                       },
+                       {
+                           "Value":  true,
+                           "Name":  "RestartExplorer"
+                       }
+                   ],
+    "Version":  "1.0"
+}
