@@ -143,7 +143,8 @@ git clone https://github.com/zoicware/RemoveWindowsAI c:\23jrg\RemoveAI
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut3 = $WshShell.CreateShortcut("$Home\Desktop\Remove-AI.lnk")
-$Shortcut3.TargetPath = "C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
+$Shortcut3.TargetPath = "powershell.exe"
+$Shortcut3.Arguments = [string]"C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
 $Shortcut3.Save()
 
 #Deployment Emailer gets placed on the Desktop
