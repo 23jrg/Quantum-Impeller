@@ -18,7 +18,7 @@ param(
     [switch]$AllOptions,
     [switch]$revertMode,
     [switch]$backupMode,
-    
+    [ValidateSet('photoviewer', 'mspaint', 'snippingtool', 'notepad', 'photoslegacy')]
     [array]$InstallClassicApps,
     [switch]$RunWinUpdateRepair
 )
@@ -3473,7 +3473,7 @@ if ($nonInteractive) {
         Hide-AI-Components 
         Disable-Notepad-Rewrite 
         Remove-Recall-Tasks 
-        Update-Cleanup-Check
+
     }
     else {
         #loop through options array and run desired tweaks
