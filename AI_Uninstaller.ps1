@@ -18,7 +18,7 @@ param(
     [switch]$AllOptions,
     [switch]$revertMode,
     [switch]$backupMode,
-    [ValidateSet('photoviewer', 'mspaint', 'snippingtool', 'notepad', 'photoslegacy')]
+    
     [array]$InstallClassicApps,
     [switch]$RunWinUpdateRepair
 )
