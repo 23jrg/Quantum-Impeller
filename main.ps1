@@ -51,8 +51,6 @@ Set-ItemProperty -Path $RegKeyPath -Name "AppsUseLightTheme" -Value 0 -Type Dwor
 # Set System to Dark
 Set-ItemProperty -Path $RegKeyPath -Name "SystemUsesLightTheme" -Value 0 -Type Dword -Force
 
-Write-Host "Dark Mode Set Successfully"
-
 # Define the Yellow accent color in hex (AABBGGRR format for registry)
 $yellowHex = 0xFF009AC4
 
@@ -90,7 +88,10 @@ foreach ($appname in $appsToUnpin) {
     }
 }
 
-# Refresh the explorer process to apply changes without logging out
+#Center taskbar
+Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
+
+#Refresh the explorer process to apply changes without logging out
 Stop-Process -Name explorer -Force
     
 } 
