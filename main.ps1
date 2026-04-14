@@ -124,11 +124,14 @@ $CaffeineShortcut.Save()
 git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
 schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
-#Windows Activator, the first line makes an exclusion in defender for the working directory because microsoft doesn't like MAS
+#Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
 #powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
-#git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
-#git clone https://github.com/massgravel/Microsoft-Activation-Scripts;.\Microsoft-Activation-Scripts\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
-git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\All-In-One-Version-KL\MAS_AIO.cmd;
+git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
+
+$WshShell = New-Object -COMObject WScript.Shell
+$Shortcut4 = $WshShell.CreateShortcut("$Home\Desktop\Activator.lnk")
+$Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\All-In-One-Version-KL\MAS_AIO.cmd"
+$Shortcut4.Save()
 
 #Handy Windows updater gets placed on the desktop
 git clone https://github.com/23jrg/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
