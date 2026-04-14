@@ -125,7 +125,7 @@ git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
 schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
-#powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
+powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 $WshShell = New-Object -COMObject WScript.Shell
