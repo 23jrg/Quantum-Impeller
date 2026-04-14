@@ -2849,69 +2849,8 @@ Get-ScheduledTask -TaskName "*Office Actions Server*" -ErrorAction SilentlyConti
 
 
 function Update-Cleanup-Check {
-    
-    if (!$revert) {
-        #fastest method to get majorbuild.updateBuildRevision ex. 26200.7922
-        $key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\Microsoft\Windows NT\CurrentVersion')
-        $OSBuild = "$($key.GetValue('CurrentBuild')).$($key.GetValue('UBR'))"
-        $key.Close()
-        #attempt to get cached build incase user has already cached one before but is no longer accurate somehow
-        try {
-            $key2 = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey('SOFTWARE\RemoveWindowsAI')
-            $CurrentCachedBuild = "$($key2.GetValue('CachedBuild'))"
-            $key2.Close()
-        }
-        catch {
-            $CurrentCachedBuild = $null
-        }
 
-        #cache current build before making update script in regitry if the script detects and update as happened the cachedbuild value will be updated
-        $regValName = 'CachedBuild'
-        if ($CurrentCachedBuild -ne $OSBuild) {
-            Write-Status -msg 'Caching Current OS Build in Registry...' 
-            Reg.exe add 'HKLM\SOFTWARE\RemoveWindowsAI' /v $regValName /d "$OSBuild" /t REG_SZ /f >$null
-        }
-
-        #grab update cleanup script from github instead of embedding it in here
-        try {
-            Write-Status -msg 'Attempting to get Update Cleanup script from Github...'
-            $scriptContent = Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/refs/heads/main/RemoveAI-UpdateCleanup.ps1' -UseBasicParsing -ErrorAction Stop | Select-Object Content
-        }
-        catch {
-            Write-Status -msg 'Unable to get Update Cleanup script from Github!' -errorOutput
-            return
-        }
-
-        #create script
-        $scriptPath = "$env:ProgramData\RemoveAI-UpdateCleanup.ps1"
-        Set-Content -Path $scriptPath -Value $scriptContent.Content -Force
-
-        #create silent script so that there is no powershell window flash for the user
-        $vbsScriptContent = @"
-Dim shell,command
-command = "powershell.exe -ep bypass -c ""$env:ProgramData\RemoveAI-UpdateCleanup.ps1"""
-Set shell = CreateObject("WScript.Shell")
-shell.Run command,0
-"@
-        $vbsPath = "$env:ProgramData\RemoveAI-UpdateCleanup-Silent.vbs"
-        Set-Content -Path $vbsPath -Value $vbsScriptContent -Force
-
-        Write-Status -msg 'Creating Update Cleanup Scheduled Task...'
-        $action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument "$env:ProgramData\RemoveAI-UpdateCleanup-Silent.vbs"
-        $trigger = New-ScheduledTaskTrigger -AtLogOn
-        $principal = New-ScheduledTaskPrincipal -UserId 'S-1-5-18'
-        $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries 
-        #create update cleanup checker task
-        Register-ScheduledTask -TaskPath '\' -TaskName 'RemoveAI-UpdateCleanupChecker' -Action $action -Trigger $trigger -Principal $principal -Settings $settings -Force | Out-Null
-        
-    }
-    else {
-        Write-Status -msg 'Removing Update Cleanup Script and Task...'
-        Unregister-ScheduledTask -TaskName 'RemoveAI-UpdateCleanupChecker' -Confirm:$false -ErrorAction SilentlyContinue
-        Remove-Item "$env:ProgramData\RemoveAI-UpdateCleanup-Silent.vbs" -ErrorAction SilentlyContinue -Force
-        Remove-Item "$env:ProgramData\RemoveAI-UpdateCleanup.ps1" -ErrorAction SilentlyContinue -Force
-    }
-
+write-host "Skipping the creation of AI-Removing tasks"
     
 }
 
