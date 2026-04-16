@@ -1,6 +1,9 @@
 #Set Execution Policy Remote Signed (needed for the gui tools)
 set-executionpolicy remotesigned;a;y;
 
+#Create an exclusion to prevent false positives
+powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
+
 #Automatic debloat then launches the Guibased Tools
 git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
