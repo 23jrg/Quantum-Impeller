@@ -1,6 +1,8 @@
 #Set Execution Policy Remote Signed (needed for the gui tools)
 set-executionpolicy remotesigned;a;y;
 
+powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
+
 #Automatic debloat then launches the Guibased Tools
 git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
@@ -92,7 +94,7 @@ foreach ($appname in $appsToUnpin) {
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
 
 #Refresh the explorer process to apply changes without logging out
-Stop-Process -Name explorer -Force
+#Stop-Process -Name explorer -Force
     
 } 
 
@@ -126,7 +128,6 @@ git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
 schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
-powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 $WshShell = New-Object -COMObject WScript.Shell
