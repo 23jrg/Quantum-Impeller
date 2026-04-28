@@ -17,6 +17,13 @@ Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-A
 #Makes a .txt with the ID of the runner who ran this script (this is used later for cleanup)
 C:\23jrg\Quantum-Impeller\quser.bat
 
+#Set Timezone to EST
+C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
+
+#Sync Clock
+w32tm /resync /force
+Restart-Service w32time
+
 #Refreshes the powershell path to use winget
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
