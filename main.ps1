@@ -95,8 +95,18 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 
 #Refresh the explorer process to apply changes without logging out
 #Stop-Process -Name explorer -Force
-    
+
 } 
+
+#Set NTP pool time server
+#w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
+
+#Set Timezone to EST
+C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
+
+#Sync Clock
+w32tm /resync /force
+Restart-Service w32time
 
 #Refreshes the powershell path to use winget
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
