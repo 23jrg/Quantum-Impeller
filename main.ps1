@@ -140,6 +140,10 @@ $ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
 $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
 $ToolShortcut.Save()
 
+#Copies the Inactive User Uninstaller to the tools folder
+Copy-Item -Path "C:\LogInactiveOff\uninstall.bat" -Destination "C:\23jrg\Quantum-Impeller\Tools"
+Rename-Item -Path "C:\23jrg\Quantum-Impeller\Tools\uninstall.bat" -NewName "Uninstall_Log_Inactive_Off.bat"
+
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
