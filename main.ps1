@@ -137,19 +137,27 @@ $CaffeineShortcut.Save()
 git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
 schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
+#Sets a copy of the Toolkit on the user's desktop
+$WshShell = New-Object -COMObject WScript.Shell
+$Shortcut3 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools.lnk")
+$Shortcut3.TargetPath = "powershell.exe"
+$Shortcut3.Arguments = [string]"C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
+$Shortcut3.Save()
+
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut4 = $WshShell.CreateShortcut("$Home\Desktop\Activator.lnk")
+$Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Activator.lnk")
 $Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\All-In-One-Version-KL\MAS_AIO.cmd"
 $Shortcut4.Save()
 
-#Handy Windows updater gets placed on the desktop
+
+#Handy Windows updater gets placed in the tools folder
 git clone https://github.com/23jrg/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
 
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
+$Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Mediacreationtool.lnk")
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
@@ -157,18 +165,18 @@ $Shortcut.Save()
 git clone https://github.com/zoicware/RemoveWindowsAI c:\23jrg\RemoveAI
 
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut3 = $WshShell.CreateShortcut("$Home\Desktop\Remove-AI.lnk")
+$Shortcut3 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Remove-AI.lnk")
 $Shortcut3.TargetPath = "powershell.exe"
 $Shortcut3.Arguments = [string]"C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
 $Shortcut3.Save()
 
-#Deployment Emailer gets placed on the Desktop
+#Deployment Emailer gets placed in the Tools folder
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
 
 
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Send_Deployment_Email.lnk")
+$Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Send_Deployment_Email.lnk")
 $Shortcut.TargetPath = "C:\23jrg\SendEmail.bat"
 $Shortcut.Save()
 
