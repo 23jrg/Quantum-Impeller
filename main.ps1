@@ -136,8 +136,9 @@ schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn Log
 
 #Sets a copy of the Toolkit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
-$ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
+$hortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
 $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
+$shortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
 
 #Copies the Inactive User Uninstaller to the tools folder
