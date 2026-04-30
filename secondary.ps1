@@ -90,6 +90,7 @@ git clone https://github.com/23jrg/Kick-Inactive-Users AppData\Local\Temp\KIU
 $WshShell = New-Object -COMObject WScript.Shell
 $ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
 $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
+$ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
 
 #Creates an installer for the program and moves it to the desktop
