@@ -86,20 +86,31 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 #Pulls down a program that kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
 git clone https://github.com/23jrg/Kick-Inactive-Users AppData\Local\Temp\KIU
 
+#Sets a copy of the Toolkit on the user's desktop
+$WshShell = New-Object -COMObject WScript.Shell
+$ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
+$ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
+$ToolShortcut.Save()
+
 #Creates an installer for the program and moves it to the desktop
 $WshShell = New-Object -COMObject WScript.Shell
-$LoiaShortcut = $WshShell.CreateShortcut("$Home\desktop\Install_LogOffInactiveAccounts.lnk")
+$LoiaShortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Install_LogOffInactiveAccounts.lnk")
 $LoiaShortcut.TargetPath = "$Home\AppData\Local\Temp\KIU\setup.bat"
 $LoiaShortcut.Save()
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
+$WshShell = New-Object -COMObject WScript.Shell
+$Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Change_Office_Edition.lnk")
+$Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd"
+$Shortcut4.Save()
+
 #Handy Windows updater gets placed on the desktop
 git clone https://github.com/lzw29107/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
 
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("$Home\Desktop\Mediacreationtool.lnk")
+$Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Mediacreationtool.lnk")
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
