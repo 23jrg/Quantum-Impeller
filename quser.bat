@@ -1,5 +1,5 @@
 @echo off
-$env:USERNAME | Out-File -FilePath "C:\23jrg\Quantum-Impeller\user_id.txt"
+echo %USERNAME% > "C:\23jrg\Quantum-Impeller\user_id.txt"
 set OUTPUT=C:\23jrg\Quantum-Impeller\session_id.txt
 
 > %OUTPUT% (
