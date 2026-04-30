@@ -123,9 +123,6 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 #Actives Caffeine, keeping the computer on for 15 mins while we work, sets computer to remain on for 15 mins after we sign in
 Caffeine -activefor:15 -replace;
 
-#Activates the tiling manager
-#GlazeWM
-
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
 $CaffeineShortcut.Arguments = "-activefor:15 -replace"
@@ -139,10 +136,9 @@ schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn Log
 
 #Sets a copy of the Toolkit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut3 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools.lnk")
-$Shortcut3.TargetPath = "powershell.exe"
-$Shortcut3.Arguments = [string]"C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
-$Shortcut3.Save()
+$ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
+$ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
+$ToolShortcut.Save()
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
 git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
