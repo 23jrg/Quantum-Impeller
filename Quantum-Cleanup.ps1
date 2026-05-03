@@ -18,7 +18,7 @@ logoff (get-content "C:\23jrg\Quantum-Impeller\session_id.txt");
 
 $ErrorActionPreference = 'Stop'
 
-Remove-Item -Path "C:\Users\$user_id\desktop\tools" -Force -Recurse; 
+Remove-Item -Path "C:\Users\$user_id\desktop\TechTools.lnk" -Force; 
 
 $PSNativeCommandUseErrorActionPreference = $true
 
