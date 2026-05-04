@@ -115,7 +115,7 @@ $Shortcut4.Save()
 git clone https://github.com/lzw29107/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
 
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Mediacreationtool.lnk")
+$Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\11_Upgrade_Tool.lnk")
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
