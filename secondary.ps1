@@ -6,11 +6,10 @@ powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpP
 
 #Automatic debloat then launches the Guibased Tools
 git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
-Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
-Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Xephora-Threat-Remediation-Scripts\OneStart\OneStart-Remediation-Script.ps1"
-Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Xephora-Threat-Remediation-Scripts\OneBrowser\OneBrowser-Remediation-Script.ps1"
-Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Xephora-Threat-Remediation-Scripts\WaveBrowser\WaveBrowser-Remediation-Script-Win10-BrowserKill.ps1"
-Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Remediation-Scripts\WaveBrowser\WaveBrowser-Remediation-Script-Win10-BrowserKill.ps1"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneStart\OneStart-Remediation-Script.ps1"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneBrowser\OneBrowser-Remediation-Script.ps1"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\WaveBrowser\WaveBrowser-Remediation-Script-Win10-BrowserKill.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
