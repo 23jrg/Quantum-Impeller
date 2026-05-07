@@ -88,7 +88,7 @@ $CaffeineShortcut.Save()
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
 #Pulls down a program that kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
-git clone https://github.com/23jrg/Kick-Inactive-Users AppData\Local\Temp\KIU
+git clone https://github.com/23jrg/Kick-Inactive-Users 23jrg/Kick-Inactive-Users
 
 #Sets a copy of the Toolkit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
@@ -100,7 +100,7 @@ $ToolShortcut.Save()
 #Creates an installer for the program and moves it to the desktop
 $WshShell = New-Object -COMObject WScript.Shell
 $LoiaShortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Install_LogOffInactiveAccounts.lnk")
-$LoiaShortcut.TargetPath = "$Home\AppData\Local\Temp\KIU\setup.bat"
+$LoiaShortcut.TargetPath = "C:\23jrg\Kick-Inactive-Users\setup.bat"
 $LoiaShortcut.Save()
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
