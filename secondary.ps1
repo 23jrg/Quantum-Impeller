@@ -88,7 +88,7 @@ $CaffeineShortcut.Save()
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
 #Pulls down a program that kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
-git clone https://github.com/23jrg/Kick-Inactive-Users 23jrg/Kick-Inactive-Users
+git clone https://github.com/23jrg/Kick-Inactive-Users C:\23jrg\Kick-Inactive-Users
 
 #Sets a copy of the Toolkit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
