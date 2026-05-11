@@ -181,7 +181,10 @@ $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
 #Anti-AI
-git clone https://github.com/zoicware/RemoveWindowsAI c:\23jrg\RemoveAI
+#git clone https://github.com/zoicware/RemoveWindowsAI c:\23jrg\RemoveAI
+curl -o C:\24jrg.zip https://github.com/zoicware/RemoveWindowsAI/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren C:\23jrg\RemoveWindowsAI-main RemoveAI
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut3 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Remove-AI.lnk")
