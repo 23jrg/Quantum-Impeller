@@ -217,7 +217,10 @@ reg add "HKLM\SOFTWARE\Microsoft\PolicyManager\default\Connectivity\DisableCross
 Get-AppxPackage *Microsoft.CrossDeviceExperienceHost* | Remove-AppxPackage
 
 #Grabs some functions to be run on cleanup
-git clone https://github.com/ChrisTitusTech/winutil c:\23jrg\Winutil
+#git clone https://github.com/ChrisTitusTech/winutil c:\23jrg\Winutil
+curl -o C:\24jrg.zip https://github.com/ChrisTitusTech/winutil/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren C:\23jrg\winutil-main Winutil
 
 #Cleans up leftovers on next startup
 schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Cleanup.xml' /tn Quantum-Cleanup;
