@@ -128,13 +128,17 @@ winget install ZhornSoftware.Caffeine --source winget --force;
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
 #Actives Caffeine, keeping the computer on for 15 mins while we work, sets computer to remain on for 15 mins after we sign in
-Caffeine -activefor:15 -replace;
+if (-not (Test-Path -Path "c:\users\$env:USERNAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine_wrk_hrs.lnk")) {
+
+    Caffeine -activefor:15 -replace;
 
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
 $CaffeineShortcut.Arguments = "-activefor:15 -replace"
 $CaffeineShortcut.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe\caffeine64.exe"
 $CaffeineShortcut.Save()
+
+}
 
 #Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
 #git  https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
