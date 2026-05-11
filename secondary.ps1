@@ -78,13 +78,17 @@ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";"
 winget install ZhornSoftware.Caffeine --source winget --force;
 
 #Sets Caffeine to  keep the computer awake for 5 minutes every time the runner logs in
-Caffeine -activefor:5 -replace;
+if (-not (Test-Path -Path "c:\users\$env:USERNAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine_wrk_hrs.lnk")) {
+
+    Caffeine -activefor:15 -replace;
 
 $WshShell = New-Object -COMObject WScript.Shell
 $CaffeineShortcut = $WshShell.CreateShortcut("$Home\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine.lnk")
-$CaffeineShortcut.Arguments = "-activefor:5 -replace"
+$CaffeineShortcut.Arguments = "-activefor:15 -replace"
 $CaffeineShortcut.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe\caffeine64.exe"
 $CaffeineShortcut.Save()
+
+}
 
 #Refreshes the powershell path again to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
