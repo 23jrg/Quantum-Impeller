@@ -5,7 +5,9 @@ set-executionpolicy remotesigned;a;y;
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 
 #Automatic debloat then launches the Guibased Tools
-git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
+curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg\;
+ren C:\23jrg\Win11Debloat-master win11debloat;
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneStart\OneStart-Remediation-Script.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneBrowser\OneBrowser-Remediation-Script.ps1"
@@ -88,7 +90,10 @@ $CaffeineShortcut.Save()
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
 #Pulls down a program that kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
-git clone https://github.com/23jrg/Kick-Inactive-Users C:\23jrg\Kick-Inactive-Users
+#git clone https://github.com/23jrg/Kick-Inactive-Users C:\23jrg\Kick-Inactive-Users
+curl -o C:\24jrg.zip https://github.com/23jrg/Kick-Inactive-Users/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg
+ren c:\23jrg\Kick-Inactive-Users-main Kick-Inactive-Users
 
 #Sets a copy of the Toolkit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
@@ -104,7 +109,10 @@ $LoiaShortcut.TargetPath = "C:\23jrg\Kick-Inactive-Users\setup.bat"
 $LoiaShortcut.Save()
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
-git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
+curl -o C:\24jrg.zip https://github.com/massgravel/Microsoft-Activation-Scripts/archive/refs/heads/master.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren C:\23jrg\Microsoft-Activation-Scripts-master Activator;
+C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Change_Office_Edition.lnk")
@@ -112,7 +120,9 @@ $Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Of
 $Shortcut4.Save()
 
 #Handy Windows updater gets placed on the desktop
-git clone https://github.com/lzw29107/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
+curl -o C:\24jrg.zip https://github.com/23jrg/MediaCreationTool.bat/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren c:\23jrg\MediaCreationTool.bat-main "MediaCreationTool.bat"
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\11_Upgrade_Tool.lnk")
@@ -134,7 +144,9 @@ reg add "HKLM\SOFTWARE\Microsoft\PolicyManager\default\Connectivity\DisableCross
 Get-AppxPackage *Microsoft.CrossDeviceExperienceHost* | Remove-AppxPackage
 
 #Grabs some functions to be run on cleanup
-git clone https://github.com/ChrisTitusTech/winutil c:\23jrg\Winutil
+curl -o C:\24jrg.zip https://github.com/ChrisTitusTech/winutil/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren C:\23jrg\winutil-main Winutil
 
 #Cleans up leftovers on next startup
 schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Cleanup.xml' /tn Quantum-Cleanup;
