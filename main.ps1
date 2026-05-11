@@ -156,6 +156,13 @@ $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
 $ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
 
+#Puts a shortcut of Caffeine in the tech tools, set to stay active from 9:30-6:00
+$WshShell = New-Object -COMObject WScript.Shell
+$Caffeine_wrk_hrs = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\caffeine_wrk_hrs.lnk")
+$Caffeine_wrk_hrs.Arguments = " -activeperiods:0930-1800 -replace"
+$Caffeine_wrk_hrs.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\ZhornSoftware.Caffeine_Microsoft.Winget.Source_8wekyb3d8bbwe\caffeine64.exe"
+$Caffeine_wrk_hrs.Save()
+
 #Copies the Inactive User Uninstaller to the tools folder
 Copy-Item -Path "C:\LogInactiveOff\uninstall.bat" -Destination "C:\23jrg\Quantum-Impeller\Tools"
 Rename-Item -Path "C:\23jrg\Quantum-Impeller\Tools\uninstall.bat" -NewName "Uninstall_Log_Inactive_Off.bat"
