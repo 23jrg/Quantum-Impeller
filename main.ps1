@@ -137,8 +137,8 @@ $CaffeineShortcut.TargetPath = "$Home\AppData\Local\Microsoft\WinGet\Packages\Zh
 $CaffeineShortcut.Save()
 
 #Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
-#git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
-#git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
+#git  https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
+#git  https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
 curl -o C:\24jrg.zip https://github.com/23jrg/Kick-Inactive-Users/archive/refs/heads/main.zip;
 tar -xf C:\24jrg.zip -C C:\
 ren c:\Kick-Inactive-Users-main LogInactiveOff
@@ -157,7 +157,11 @@ Copy-Item -Path "C:\LogInactiveOff\uninstall.bat" -Destination "C:\23jrg\Quantum
 Rename-Item -Path "C:\23jrg\Quantum-Impeller\Tools\uninstall.bat" -NewName "Uninstall_Log_Inactive_Off.bat"
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
-git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
+#git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;
+curl -o C:\24jrg.zip https://github.com/massgravel/Microsoft-Activation-Scripts/archive/refs/heads/master.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren C:\23jrg\Microsoft-Activation-Scripts-master Activator;
+C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Activator.lnk")
@@ -166,7 +170,10 @@ $Shortcut4.Save()
 
 
 #Handy Windows updater gets placed in the tools folder
-git clone https://github.com/23jrg/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
+#git clone https://github.com/23jrg/MediaCreationTool.bat c:\23jrg\MediaCreationTool.bat;
+curl -o C:\24jrg.zip https://github.com/23jrg/MediaCreationTool.bat/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\23jrg;
+ren c:\23jrg\MediaCreationTool.bat-main "MediaCreationTool.bat"
 
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\11_Upgrade_Tool.lnk")
