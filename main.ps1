@@ -135,7 +135,11 @@ $CaffeineShortcut.Save()
 
 #Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
 #git clone https://github.com/23jrg/Kick-Inactive-Users;.\Kick-Inactive-Users\setup.bat;
-git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
+#git clone https://github.com/23jrg/Kick-Inactive-Users C:\LogInactiveOff;
+curl -o C:\24jrg.zip https://github.com/23jrg/Kick-Inactive-Users/archive/refs/heads/main.zip;
+tar -xf C:\24jrg.zip -C C:\
+ren c:\Kick-Inactive-Users-main LogInactiveOff
+
 schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
 #Sets a copy of the Toolkit on the user's desktop
