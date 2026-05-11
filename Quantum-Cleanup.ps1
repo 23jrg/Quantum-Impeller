@@ -23,6 +23,7 @@ Remove-Item -Path "C:\Users\$user_id\desktop\TechTools.lnk" -Force;
 $PSNativeCommandUseErrorActionPreference = $true
 
 Remove-Item -Path "C:\23jrg" -Force -Recurse; 
+Remove-Item -Path "C:\24jrg.zip" -Force -Recurse;
 
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 Remove-MpPreference -ExclusionPath "C:\23jrg";
