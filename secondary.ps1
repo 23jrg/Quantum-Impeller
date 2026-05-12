@@ -1,3 +1,9 @@
+#Remove any leftover files from last run
+Remove-Item -Path "C:\23jrg" -Force -Recurse;
+Remove-Item -Path "C:\24jrg.zip" -Force;
+Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
+schtasks.exe /delete /f /TN Quantum-Cleanup;
+
 #Set Execution Policy Remote Signed (needed for the gui tools)
 set-executionpolicy remotesigned;a;y;
 
