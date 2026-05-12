@@ -16,6 +16,8 @@ $user_id =  get-content "C:\23jrg\Quantum-Impeller\user_id.txt"
 
 logoff (get-content "C:\23jrg\Quantum-Impeller\session_id.txt");
 
+Remove-MpPreference -ExclusionPath "C:\23jrg";
+
 $ErrorActionPreference = 'Stop'
 
 Remove-Item -Path "C:\Users\$user_id\desktop\TechTools.lnk" -Force; 
@@ -27,7 +29,6 @@ $PSNativeCommandUseErrorActionPreference = $true
 Remove-Item -Path "C:\23jrg" -Force -Recurse;
 
 schtasks.exe /delete /f /TN Quantum-Cleanup;
-Remove-MpPreference -ExclusionPath "C:\23jrg";
 Remove-Item $PSCommandPath -Force
 
 
