@@ -8,7 +8,7 @@ schtasks.exe /delete /f /TN Quantum-Cleanup -Wait;
 set-executionpolicy remotesigned;a;y;
 
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
-
+powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\24jrg";
 #Automatic debloat then launches the Guibased Tools
 #git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
 curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip;
