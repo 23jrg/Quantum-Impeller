@@ -17,6 +17,7 @@ $user_id =  get-content "C:\23jrg\Quantum-Impeller\user_id.txt"
 logoff (get-content "C:\23jrg\Quantum-Impeller\session_id.txt");
 
 Remove-MpPreference -ExclusionPath "C:\23jrg";
+Remove-MpPreference -ExclusionPath "C:\24jrg";
 
 $ErrorActionPreference = 'Stop'
 
