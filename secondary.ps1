@@ -9,7 +9,7 @@ set-executionpolicy remotesigned;a;y;
 
 #Create an exclusion to prevent false positives
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
-
+powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\24jrg";
 #Automatic debloat then launches the Guibased Tools
 curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip;
 tar -xf C:\24jrg.zip -C C:\23jrg\;
