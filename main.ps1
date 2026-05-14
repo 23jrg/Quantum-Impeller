@@ -245,8 +245,6 @@ curl -o C:\24jrg.zip https://github.com/ChrisTitusTech/winutil/archive/refs/head
 tar -xf C:\24jrg.zip -C C:\23jrg;
 ren C:\23jrg\winutil-main Winutil
 
-Remove-Item -Path "C:\24jrg.zip" -Force -Recurse;
-
 #Cleans up leftovers on next startup
 schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Cleanup.xml' /tn Quantum-Cleanup;
 #schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Clipper.xml' /tn Quantum-Clipper;
