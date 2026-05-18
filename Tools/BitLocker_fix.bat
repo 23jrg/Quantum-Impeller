@@ -3,4 +3,4 @@ FSUTIL DIRTY query %SystemDrive% >NUL || (
     EXIT
 )
 
-powershell -Command "Remove-Item -Path 'C:\Windows\System32\GroupPolicyUsers' -Force -Recurse;Remove-Item -Path 'C:\Windows\System32\GroupPolicy' -Force -Recurse;Remove-Item -Path 'C:\Windows\System32\Recovery\ReAgent.xml' -Force;gpupdate /force;shutdown -r -t 1"
+powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 1;Remove-Item -Path 'C:\Windows\System32\GroupPolicyUsers' -Force -Recurse;Remove-Item -Path 'C:\Windows\System32\GroupPolicy' -Force -Recurse;Remove-Item -Path 'C:\Windows\System32\Recovery\ReAgent.xml' -Force;gpupdate /force;shutdown -r -t 1"
