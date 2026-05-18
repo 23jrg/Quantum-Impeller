@@ -142,6 +142,9 @@ $Shortcut.Save()
 #Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path C:\23jrg\Quantum-Impeller\qmr_settings.xml;
 
+#Set Page File to automatically managed
+Set-CimInstance -Query "SELECT * FROM Win32_ComputerSystem" -Property @{AutomaticManagedPagefile=$True}
+
 #Set fast startup to disabled
 reg add 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power' -v 'HiberbootEnabled' /t REG_DWORD -d 0 /f
 
