@@ -3,4 +3,4 @@ FSUTIL DIRTY query %SystemDrive% >NUL || (
     EXIT
 )
 
-powershell -Command "Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate -Install -AcceptAll -AutoReboot"
+powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 1;Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate -Install -AcceptAll -AutoReboot"
