@@ -3,4 +3,4 @@ FSUTIL DIRTY query %SystemDrive% >NUL || (
     EXIT
 )
 
-powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 1;caffeine -replace;curl -o C:\23jrg\Quantum-Impeller\tools\tron 'https://www.dropbox.com/scl/fo/prrk0mely19rjp9wzqojl/APtqiavYg_8v98lLIVmNb38?rlkey=ogk1k9i0u6kfmmvvn35jskgvw&st=85s2zz34&dl=1';C:\23jrg\Quantum-Impeller\tools\tron\tron.bat;Remove-Item $PSCommandPath -Force;"
+powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 1;caffeine -replace;curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fi/ho3347utdf4k990xfq060/tron.zip?rlkey=j0ew8tx0udgrzdhfzaacwvvy7&st=jk0jqyfd&dl=1';tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools;C:\23jrg\Quantum-Impeller\tools\tron\tron.bat;Remove-Item $PSCommandPath -Force;"
