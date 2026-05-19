@@ -1,6 +1,10 @@
 #. C:\23jrg\Winutil\functions\public\Invoke-WPFFixesUpdate.ps1; Invoke-WPFFixesUpdate
 
-. C:\23jrg\Winutil\functions\public\Invoke-WPFSystemRepair.ps1; Invoke-WPFSystemRepair
+#. C:\23jrg\Winutil\functions\public\Invoke-WPFSystemRepair.ps1; Invoke-WPFSystemRepair
+
+Start-Process cmd.exe -ArgumentList '/c chkdsk /scan /perf' -NoNewWindow -Wait;
+Start-Process cmd.exe -ArgumentList '/c sfc /scannow' -NoNewWindow -Wait;
+Start-Process cmd.exe -ArgumentList '/c dism /online /cleanup-image /restorehealth' -NoNewWindow -Wait;
 
 Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate -Install -AcceptAll -IgnoreReboot
 
