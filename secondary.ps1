@@ -154,11 +154,6 @@ taskkill /IM CrossDeviceResume.exe
 reg add "HKLM\SOFTWARE\Microsoft\PolicyManager\default\Connectivity\DisableCrossDeviceResume" /v "value" /t REG_DWORD /d "1" /f
 Get-AppxPackage *Microsoft.CrossDeviceExperienceHost* | Remove-AppxPackage
 
-#Grabs some functions to be run on cleanup
-curl -o C:\24jrg.zip https://github.com/ChrisTitusTech/winutil/archive/refs/heads/main.zip;
-tar -xf C:\24jrg.zip -C C:\23jrg;
-ren C:\23jrg\winutil-main Winutil
-
 #Cleans up leftovers on next startup
 schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Cleanup.xml' /tn Quantum-Cleanup;
 Move-Item -Path "C:\23jrg\Quantum-Impeller\Quantum-Cleanup.ps1" -Destination "C:\Program Files\"
