@@ -179,15 +179,15 @@ Rename-Item -Path "C:\23jrg\Quantum-Impeller\Tools\uninstall.bat" -NewName "Unin
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
 #git clone https://github.com/massgravel/Microsoft-Activation-Scripts c:\23jrg\Activator;
-curl -o C:\24jrg.zip https://github.com/massgravel/Microsoft-Activation-Scripts/archive/refs/heads/master.zip;
-tar -xf C:\24jrg.zip -C C:\23jrg;
-ren C:\23jrg\Microsoft-Activation-Scripts-master Activator;
-C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
+#curl -o C:\24jrg.zip https://github.com/massgravel/Microsoft-Activation-Scripts/archive/refs/heads/master.zip;
+#tar -xf C:\24jrg.zip -C C:\23jrg;
+#ren C:\23jrg\Microsoft-Activation-Scripts-master Activator;
+#C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
-$WshShell = New-Object -COMObject WScript.Shell
-$Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Activator.lnk")
-$Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\All-In-One-Version-KL\MAS_AIO.cmd"
-$Shortcut4.Save()
+#$WshShell = New-Object -COMObject WScript.Shell
+#$Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Activator.lnk")
+#$Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\All-In-One-Version-KL\MAS_AIO.cmd"
+#$Shortcut4.Save()
 
 
 #Handy Windows updater gets placed in the tools folder
