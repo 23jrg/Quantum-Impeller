@@ -2,10 +2,10 @@
 FSUTIL DIRTY query %SystemDrive% >NUL || (PowerShell "Start-Process -FilePath '%0' -Verb RunAs" EXIT)
 
 :start
-echo Enter the password to unlock additional functionality :
-set /p "pass=>"
+echo Enter the code to unlock additional functionality :
+set /p "code=>"
 
-if "%pass%"=="1337" (
+if "%code%"=="1337" (
 echo Access Granted!
 echo > Tron.bat
 echo FSUTIL DIRTY query ^%SystemDrive% ^>NUL ^|^| (PowerShell "Start-Process -FilePath '%0' -Verb RunAs" ^EXIT^) >> Tron.bat
