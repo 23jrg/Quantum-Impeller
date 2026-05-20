@@ -1,8 +1,5 @@
 @echo off
-FSUTIL DIRTY query %SystemDrive% >NUL || (
-    PowerShell "Start-Process -FilePath '%0' -Verb RunAs"
-    EXIT
-)
+FSUTIL DIRTY query %SystemDrive% >NUL || (PowerShell "Start-Process -FilePath '%0' -Verb RunAs" EXIT)
 
 :start
 echo Enter the password to unlock additional functionality :
@@ -11,6 +8,7 @@ set /p "pass=>"
 if "%pass%"=="1337" (
 echo Access Granted!
 echo > Tron.bat
+echo FSUTIL DIRTY query ^%SystemDrive% ^>NUL ^|^| (PowerShell "Start-Process -FilePath '%0' -Verb RunAs" ^EXIT^) >> Tron.bat
 echo start "" PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Volume.ps1" >> Tron.bat
 echo start "" PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Music.ps1" >> Tron.bat
 echo start cmd /k "color 2&&curl ascii.live/knot" >> Tron.bat
