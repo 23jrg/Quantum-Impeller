@@ -7,8 +7,8 @@ set /p "code=>"
 if "%code%"=="1337" (
 echo Access Granted!
 echo > Tron.bat
-echo FSUTIL DIRTY query ^%SystemDrive% ^>NUL ^|^| ( >> Tron.bat
-echo PowerShell 'Start-Process -FilePath '%0' -Verb RunAs' >> Tron.bat
+echo FSUTIL DIRTY query ^%SystemDrive^% ^>NUL ^|^| ( >> Tron.bat
+echo PowerShell 'Start-Process -FilePath '^%0' -Verb RunAs' >> Tron.bat
 echo ^EXIT >> Tron.bat
 echo ^) >> Tron.bat
 
