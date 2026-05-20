@@ -8,7 +8,7 @@ if "%code%"=="1337" (
 echo Access Granted!
 echo > Tron.bat
 echo FSUTIL DIRTY query ^%SystemDrive% ^>NUL ^|^| ( >> Tron.bat
-echo PowerShell ^"Start-Process -FilePath C:\23jrg\Quantum-Impeller\Tools\Advanced_Tools\Tron.bat -Verb RunAs" >> Tron.bat
+echo PowerShell ^"Start-Process -FilePath C:\23jrg\Quantum-Impeller\Tools\Advanced_Tools\Tron.bat -Verb RunAs^" >> Tron.bat
 echo ^EXIT >> Tron.bat
 echo ^) >> Tron.bat
 
