@@ -16,6 +16,8 @@ echo powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 1;Caff
 
 start powershell -Command "curl -o C:\24jrg.zip https://github.com/zoicware/RemoveWindowsAI/archive/refs/heads/main.zip;tar -xf C:\24jrg.zip -C C:\23jrg;ren C:\23jrg\RemoveWindowsAI-main RemoveAI;$WshShell = New-Object -COMObject WScript.Shell;$Shortcut3 = $WshShell.CreateShortcut('C:\23jrg\Quantum-Impeller\Tools\Advanced_Tools\Remove-AI.lnk');$Shortcut3.TargetPath = 'powershell.exe';$Shortcut3.Arguments = [string]'C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions';$Shortcut3.Save()"
 
+start powershell -Command "$WshShell = New-Object -COMObject WScript.Shell;$Shortcut4 = $WshShell.CreateShortcut('C:\23jrg\Quantum-Impeller\Tools\Advanced_Tools\Activator.lnk');$Shortcut4.TargetPath = 'powershell.exe';$Shortcut4.Arguments = [string]'iex (curl.exe -s --doh-url https://1.1.1.1/dns-query https://get.activated.win | Out-String)';$Shortcut4.Save()"
+
 (goto) 2>nul & del "%~f0"
 ) else (
     echo Access Denied. Try again.
