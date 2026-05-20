@@ -117,15 +117,15 @@ $LoiaShortcut.TargetPath = "C:\23jrg\Kick-Inactive-Users\setup.bat"
 $LoiaShortcut.Save()
 
 #Pulls down an Office edition changer, this powerful tool automates the ability to switch one installed Office edition for another
-curl -o C:\24jrg.zip https://github.com/massgravel/Microsoft-Activation-Scripts/archive/refs/heads/master.zip;
-tar -xf C:\24jrg.zip -C C:\23jrg;
-ren C:\23jrg\Microsoft-Activation-Scripts-master Activator;
-C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
+#curl -o C:\24jrg.zip https://github.com/massgravel/Microsoft-Activation-Scripts/archive/refs/heads/master.zip;
+#tar -xf C:\24jrg.zip -C C:\23jrg;
+#ren C:\23jrg\Microsoft-Activation-Scripts-master Activator;
+#C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd;
 
-$WshShell = New-Object -COMObject WScript.Shell
-$Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Change_Office_Edition.lnk")
-$Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd"
-$Shortcut4.Save()
+#$WshShell = New-Object -COMObject WScript.Shell
+#$Shortcut4 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Change_Office_Edition.lnk")
+#$Shortcut4.TargetPath = "C:\23jrg\Activator\MAS\Separate-Files-Version\Change_Office_Edition.cmd"
+#$Shortcut4.Save()
 
 #Handy Windows updater gets placed on the desktop
 curl -o C:\24jrg.zip https://github.com/23jrg/MediaCreationTool.bat/archive/refs/heads/main.zip;
