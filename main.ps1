@@ -202,16 +202,16 @@ $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
 #Anti-AI
-#git clone https://github.com/zoicware/RemoveWindowsAI c:\23jrg\RemoveAI
-curl -o C:\24jrg.zip https://github.com/zoicware/RemoveWindowsAI/archive/refs/heads/main.zip;
-tar -xf C:\24jrg.zip -C C:\23jrg;
-ren C:\23jrg\RemoveWindowsAI-main RemoveAI
+#git clone https://github.com/zoicware/WindowsAI c:\23jrg\RemoveAI
+#curl -o C:\24jrg.zip https://github.com/zoicware/RemoveWindowsAI/archive/refs/heads/main.zip;
+#tar -xf C:\24jrg.zip -C C:\23jrg;
+#ren C:\23jrg\RemoveWindowsAI-main RemoveAI
 
-$WshShell = New-Object -COMObject WScript.Shell
-$Shortcut3 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Remove-AI.lnk")
-$Shortcut3.TargetPath = "powershell.exe"
-$Shortcut3.Arguments = [string]"C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
-$Shortcut3.Save()
+#$WshShell = New-Object -COMObject WScript.Shell
+#$Shortcut3 = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Remove-AI.lnk")
+#$Shortcut3.TargetPath = "powershell.exe"
+#$Shortcut3.Arguments = [string]"C:\23jrg\RemoveAI\RemoveWindowsAi.ps1 -noninteractive -alloptions"
+#$Shortcut3.Save()
 
 #Deployment Emailer gets placed in the Tools folder
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
