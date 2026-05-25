@@ -1,4 +1,4 @@
-﻿{
+{
     "Apps":  [
                  "ACGMediaPlayer",
                  "ActiproSoftwareLLC",
@@ -52,7 +52,6 @@
                  "Microsoft.MixedReality.Portal",
                  "Microsoft.ZuneVideo",
                  "Netflix",
-                 "Microsoft.NetworkSpeedTest",
                  "NYTCrossword",
                  "Microsoft.MicrosoftOfficeHub",
                  "OneCalendar",
@@ -86,6 +85,10 @@
     "Tweaks":  [
                    {
                        "Value":  true,
+                       "Name":  "HideGallery"
+                   },
+                   {
+                       "Value":  true,
                        "Name":  "DisableStoreSearchSuggestions"
                    },
                    {
@@ -110,11 +113,15 @@
                    },
                    {
                        "Value":  true,
-                       "Name":  "DisableSearchHighlights"
+                       "Name":  "DisableBraveBloat"
                    },
                    {
                        "Value":  true,
                        "Name":  "AddFoldersToThisPC"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableSettings365Ads"
                    },
                    {
                        "Value":  true,
@@ -130,7 +137,7 @@
                    },
                    {
                        "Value":  true,
-                       "Name":  "ClearStart"
+                       "Name":  "ClearStartAllUsers"
                    },
                    {
                        "Value":  true,
@@ -138,7 +145,7 @@
                    },
                    {
                        "Value":  true,
-                       "Name":  "ShowHiddenFolders"
+                       "Name":  "DisableEdgeAI"
                    },
                    {
                        "Value":  true,
@@ -147,6 +154,10 @@
                    {
                        "Value":  true,
                        "Name":  "DisableGameBarIntegration"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableNotepadAI"
                    },
                    {
                        "Value":  true,
@@ -159,10 +170,6 @@
                    {
                        "Value":  true,
                        "Name":  "DisableBing"
-                   },
-                   {
-                       "Value":  true,
-                       "Name":  "DisableSearchHistory"
                    },
                    {
                        "Value":  true,
@@ -179,6 +186,14 @@
                    {
                        "Value":  true,
                        "Name":  "DisableEdgeAds"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisablePaintAI"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "HideHome"
                    }
                ],
     "Deployment":  [
@@ -195,7 +210,7 @@
                            "Name":  "CreateRestorePoint"
                        },
                        {
-                           "Value":  true,
+                           "Value":  false,
                            "Name":  "RestartExplorer"
                        }
                    ],
