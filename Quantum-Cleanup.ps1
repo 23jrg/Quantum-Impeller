@@ -4,7 +4,7 @@
 
 chkdsk /scan /perf;sfc /scannow;dism /online /cleanup-image /restorehealth;
 
-Install-Module PSWindowsUpdate -Force;Get-WindowsUpdate -Install -AcceptAll -IgnoreReboot
+Install-Module PSWindowsUpdate -Force;Import-Module PSWindowsUpdate;Get-WindowsUpdate -Install -AcceptAll -IgnoreReboot
 
 winget uninstall git.git --accept-source-agreements --all --silent --force --nowarn;#schtasks.exe /delete /f /TN Quantum-Clipper;
 
