@@ -1,3 +1,5 @@
+::credit to the mas activator, this script is unchanged
+
 @set masver=3.11
 @echo off
 
