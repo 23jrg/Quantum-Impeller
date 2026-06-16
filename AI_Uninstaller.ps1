@@ -1,4 +1,4 @@
-#-------CREDIT TO ZOICWARE, MODIFIED TO NOT TRIP MY AV-------
+#-------CREDIT TO ZOICWARE, WATERED DOWN TO NOT TRIP AV-------
 
 param(
     [switch]$EnableLogging,
