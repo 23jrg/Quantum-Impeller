@@ -15,7 +15,7 @@ $Exceptions = @(
 
 Write-Host "Starting systemic startup program cleanup..." -ForegroundColor Cyan
 
-# 1. System-Wide Registry Locations
+# System-Wide Registry Locations
 $GlobalRunKeys = @(
     "HKLM:\Software\Microsoft\Windows\CurrentVersion\Run",
     "HKLM:\Software\Microsoft\Windows\CurrentVersion\RunOnce",
@@ -43,7 +43,7 @@ foreach ($KeyPath in $GlobalRunKeys) {
     }
 }
 
-# 2. System-Wide Startup Folder
+# System-Wide Startup Folder
 $GlobalStartupFolder = "$env:ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp"
 if (Test-Path $GlobalStartupFolder) {
     $Files = Get-ChildItem -Path $GlobalStartupFolder -File
@@ -60,7 +60,7 @@ if (Test-Path $GlobalStartupFolder) {
     }
 }
 
-# 3. User Profiles (Folders and Offline/Active Registry Hives)
+# User Profiles (Folders and Offline/Active Registry Hives)
 $UserProfilesDir = "C:\Users"
 $Profiles = Get-ChildItem -Path $UserProfilesDir -Directory
 
@@ -72,7 +72,7 @@ foreach ($Profile in $Profiles) {
     
     Write-Host "`nProcessing profile: $Username" -ForegroundColor Cyan
     
-    # 3a. User Specific Startup Folder
+    # User Specific Startup Folder
     $UserStartupFolder = "$UserProfilesDir\$Username\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\StartUp"
     if (Test-Path $UserStartupFolder) {
         $Files = Get-ChildItem -Path $UserStartupFolder -File
@@ -89,7 +89,7 @@ foreach ($Profile in $Profiles) {
         }
     }
     
-    # 3b. Mount Offline User Registry Hive (NTUSER.DAT)
+    # Mount Offline User Registry Hive (NTUSER.DAT)
     $HivePath = "$UserProfilesDir\$Username\NTUSER.DAT"
     if (Test-Path $HivePath) {
         $TemporaryHiveName = "Hive_$Username"
