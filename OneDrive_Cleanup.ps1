@@ -33,6 +33,7 @@ foreach ($ProfilePath in $UserProfiles) {
             if ($HasFiles) {
                 Write-Host "Found local OneDrive files for another user ($ProfileName) at: $Path" -ForegroundColor Yellow
                 Write-Host "Exiting script immediately." -ForegroundColor Red
+                Start-Sleep -Seconds 45
                 Exit
             }
         }
