@@ -5,8 +5,11 @@ $Exceptions = @(
     "Caffeine",
     "Lightshot",
     "WindowsDefender",
-	  "Rustdesk",
-    "ClickPaste"
+	"Rustdesk",
+    "ClickPaste",
+	"Teams",
+	"Zoom",
+	"Webex"
 )
 
 Write-Host "Starting systemic startup program cleanup..." -ForegroundColor Cyan
