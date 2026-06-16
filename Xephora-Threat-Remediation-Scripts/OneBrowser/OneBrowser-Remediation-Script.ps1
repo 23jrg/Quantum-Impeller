@@ -1,3 +1,4 @@
+#Checks running processes for OneBrowser, if found then the script kills the process
 $process = Get-Process OneBrowser -ErrorAction SilentlyContinue
 if ($process) {
     $process | Stop-Process -Force -ErrorAction SilentlyContinue
@@ -8,6 +9,7 @@ if ($process) {
 }
 Start-Sleep -Seconds 2
 
+#Goes through every user on the computer and hunts for the hooks OneBrowser imbedded in the OS
 $user_list = Get-Item C:\users\* | Select-Object Name -ExpandProperty Name
 foreach ($user in $user_list) {
     $installers = @(Get-ChildItem "C:\users\$user\Downloads" -Recurse -Filter "OneBrowser*.exe" | ForEach-Object { $_.FullName })
