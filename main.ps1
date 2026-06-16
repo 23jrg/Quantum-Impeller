@@ -90,14 +90,18 @@ Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Search" 
 taskkill /f /im OneDrive.exe
 
 #Unpin everything from the taskbar
-$appsToUnpin = @("Microsoft Store", "Mail", "Calculator", "Microsoft Edge", "Copilot", "Microsoft 365 Copilot", "Outlook", "Dell Optimizer")
 $shell = New-Object -Com Shell.Application
 $taskbarItems = $shell.NameSpace("shell:::{4234d49b-0245-4df3-b780-3893943456e1}").Items()
-foreach ($appname in $appsToUnpin) {
-    $item = $taskbarItems | Where-Object { $_.Name -eq $appname }
-    if ($item) {
-        $item.Verbs() | Where-Object { $_.Name.Replace("&", "") -match "Unpin from taskbar" } | ForEach-Object { $_.DoIt() }
-        Write-Host "Unpinned: $appname"
+
+foreach ($appname in $taskbarItems) {
+    if ($appname.Name -ne "File Explorer") {
+        $item = $appname
+        $item.Verbs() |
+            Where-Object { $_.Name.Replace("&", "") -match "Unpin from taskbar" } |
+            ForEach-Object {
+                $_.DoIt()
+                Write-Host "Unpinned: $($appname.Name)"
+            }
     }
 }
 
