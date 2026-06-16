@@ -13,7 +13,7 @@ foreach ($ProfilePath in $UserProfiles) {
     $ProfileName = Split-Path $ProfilePath -Leaf
 
     # Skip the current user and standard Windows default/system profiles
-    if ($ProfileName -eq $CurrentUser -or $ExcludedProfiles -contains $ProfileName) {
+    if ($ProfileName -eq $ExcludedProfiles -contains $ProfileName) {
         continue
     }
 
