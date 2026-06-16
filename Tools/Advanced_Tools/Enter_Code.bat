@@ -1,11 +1,14 @@
 @echo off
 
+REM Prompts the user to re-launch this script with higher elevation
 FSUTIL DIRTY query %SystemDrive% >NUL || (
     PowerShell "Start-Process -FilePath '%0' -Verb RunAs"
     EXIT
 )
 
 :start
+
+REM Checks to see if the entered code is correct, this is not intended to be secure but more to dissuade people from running the WIP stuff that will trip sentinal one
 echo Enter the code to unlock additional functionality :
 set /p "code=>"
 
