@@ -6,6 +6,7 @@ $Exceptions = @(
     "Lightshot",
     "WindowsDefender",
 	"Rustdesk",
+	"Tailscale",
     "ClickPaste",
 	"Teams",
 	"Zoom",
