@@ -1,6 +1,3 @@
-# Requires -RunAsAdministrator
-
-# --- CONFIGURATION: Define your exceptions here (Case-insensitive names or partial strings) ---
 $Exceptions = @(
     "Caffeine",
     "Lightshot",
