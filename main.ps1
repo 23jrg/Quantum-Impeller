@@ -1,9 +1,9 @@
-# Check if the current session is running as Administrator
+#Check if the current session is running as Administrator
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 if (-not $isAdmin) {
-    # Relaunch the script with Administrator privileges (-Verb RunAs triggers UAC)
+    #Relaunch the script with Administrator privileges (-Verb RunAs triggers UAC)
     $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
     try {
         Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Verb RunAs -ErrorAction Stop
@@ -11,7 +11,7 @@ if (-not $isAdmin) {
     catch {
         Write-Warning "UAC prompt was denied or failed to launch."
     }
-    # Exit the current, non-elevated script instance
+    #Exit the current, non-elevated script instance
     Exit
 }
 
@@ -19,16 +19,19 @@ if (-not $isAdmin) {
 Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 
-#Set Execution Policy Remote Signed (needed for the gui tools)
+#Set Execution Policy Remote Signed
 set-executionpolicy remotesigned;a;y;
 
+#Set exclusion path to prevent false positives
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\24jrg";
+
 #Automatic debloat then launches the Guibased Tools
-#git clone https://github.com/raphire/win11debloat c:\23jrg\win11debloat
 curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip;
 tar -xf C:\24jrg.zip -C C:\23jrg\;
 ren C:\23jrg\Win11Debloat-master win11debloat;
+
+
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Startup_Cleaner.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\OneDrive_Cleanup.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
@@ -39,9 +42,8 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
 
-#invoke-expression 'cmd /c start powershell -Command {irm "https://christitus.com/win" | iex}';
+#Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
-#invoke-expression 'cmd /c start powershell -Command {C:\23jrg\Quantum-Impeller\quser.bat}';
 
 #Profile Customization
 if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
@@ -49,14 +51,14 @@ if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:U
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "DarkYellow"
 
-# 1. Define the online image URL and local save path
+#Backround image URL
 $url = "https://images4.alphacoders.com/101/1014815.png"
-$localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
 
-# 2. Download the image from the web
-Invoke-WebRequest -Uri $url -OutFile $localPath
 
-# Create the registry key if it does not exist
+#$localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
+Invoke-WebRequest -Uri $url -OutFile "$env:USERPROFILE\Pictures\online_wallpaper.jpg" #$localPath
+
+#Create the registry key if it does not exist
 if (!(Test-Path $cspPath)) {
     New-Item -Path $cspPath -Force | Out-Null
 }
