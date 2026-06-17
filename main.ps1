@@ -1,3 +1,20 @@
+# Check if the current session is running as Administrator
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+$isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin) {
+    # Relaunch the script with Administrator privileges (-Verb RunAs triggers UAC)
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    try {
+        Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Verb RunAs -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "UAC prompt was denied or failed to launch."
+    }
+    # Exit the current, non-elevated script instance
+    Exit
+}
+
 #Remove any leftover files from last run
 Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
 schtasks.exe /delete /f /TN Quantum-Cleanup;
