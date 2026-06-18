@@ -31,7 +31,6 @@ curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/
 tar -xf C:\24jrg.zip -C C:\23jrg\;
 ren C:\23jrg\Win11Debloat-master win11debloat;
 
-
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Startup_Cleaner.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\OneDrive_Cleanup.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
@@ -39,6 +38,7 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\X
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneBrowser\OneBrowser-Remediation-Script.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\WaveBrowser\WaveBrowser-Remediation-Script-Win10-BrowserKill.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
 
