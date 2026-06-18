@@ -218,7 +218,7 @@ $ProgressPreference = 'SilentlyContinue'
 
 
 #Create Folder
-$DebloatFolder = "C:\ProgramData\Debloat"
+$DebloatFolder = "C:\CIS\logs\"
 If (Test-Path $DebloatFolder) {
     Write-Output "$DebloatFolder exists. Skipping."
 }
@@ -229,7 +229,7 @@ Else {
     Write-Output "The folder $DebloatFolder was successfully created."
 }
 
-Start-Transcript -Path "C:\ProgramData\Debloat\Debloat.log"
+Start-Transcript -Path "C:\CIS\logs\Debloat.log"
 
 function Remove-CustomScheduledTasks {
     param (
