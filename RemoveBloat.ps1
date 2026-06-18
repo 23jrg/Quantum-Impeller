@@ -295,7 +295,7 @@ $WhitelistedApps = @(
     'Microsoft.SecHealthUI',
     'WavesAudio.MaxxAudioProforDell2019',
     'Dell Optimizer Core',
-    'Dell Command Update',
+    'Dell Command | Update',
     'Dell SupportAssist Remediation',
     'Dell SupportAssist OS Recovery Plugin for Dell Update',
     'Dell Pair',
@@ -1922,10 +1922,10 @@ if ($manufacturer -like "*Dell*") {
         "DellInc.DellDigitalDelivery"
         "DellInc.DellSupportAssistforPCs"
         "DellInc.PartnerPromo"
-        "Dell Command | Update"
-        "Dell Command | Update for Windows Universal"
-        "Dell Command | Update for Windows 10"
-        "Dell Command | Power Manager"
+        #"Dell Command | Update"
+        #"Dell Command | Update for Windows Universal"
+        #"Dell Command | Update for Windows 10"
+        #"Dell Command | Power Manager"
         "Dell Digital Delivery Service"
         "Dell Digital Delivery"
         "Dell Peripheral Manager"
