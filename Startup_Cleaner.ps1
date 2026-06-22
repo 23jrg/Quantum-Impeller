@@ -1,3 +1,5 @@
+#Experimental script designed to remove startup items and speed up boot time
+
 $Exceptions = @(
     "Caffeine",
     "Lightshot",
