@@ -1,4 +1,4 @@
-#1/2 debload scripts that are run when the Impeller is plugged into a computer, sourced from https://github.com/andrew-s-taylor/public
+#1/2 debloat scripts that are run when the Impeller is plugged into a computer, sourced from https://github.com/andrew-s-taylor/public
 
 <#
 .SYNOPSIS
