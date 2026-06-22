@@ -220,8 +220,18 @@ Set-CimInstance -Query "SELECT * FROM Win32_ComputerSystem" -Property @{Automati
 # Set fast startup to disabled
 reg add 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power' -v 'HiberbootEnabled' /t REG_DWORD -d 0 /f
 
-# Disable location popups
+# Disable location popups for current technician and future users
 reg add 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location' -v 'ShowGlobalPrompts' /t REG_DWORD -d 0 /f
+$DefaultHive = "$env:SystemDrive\Users\Default\NTUSER.DAT"
+reg.exe load HKU\DefaultUser $DefaultHive
+New-Item -Path "Registry::HKEY_USERS\DefaultUser\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location" -Force | Out-Null
+New-ItemProperty `
+    -Path "Registry::HKEY_USERS\DefaultUser\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location" `
+    -Name "ShowGlobalPrompts" `
+    -Value 0 `
+    -PropertyType DWord `
+    -Force | Out-Null
+reg.exe unload HKU\DefaultUser
 
 # Disable Resume
 taskkill /IM CrossDeviceResume.exe
