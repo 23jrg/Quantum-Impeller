@@ -47,14 +47,16 @@ C:\23jrg\Quantum-Impeller\quser.bat
 
 # Profile Customization
 if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
+
 $Host.UI.RawUI.BackgroundColor = "Black"
 $Host.UI.RawUI.ForegroundColor = "DarkYellow"
 
-# Backround image URL
+# Define the online image URL and local save path
 $url = "https://images4.alphacoders.com/101/1014815.png"
+$localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
 
-# $localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
-Invoke-WebRequest -Uri $url -OutFile "$env:USERPROFILE\Pictures\online_wallpaper.jpg" #$localPath
+# Download the image from the web
+Invoke-WebRequest -Uri $url -OutFile $localPath
 
 # Create the registry key if it does not exist
 if (!(Test-Path $cspPath)) {
@@ -74,7 +76,6 @@ public class Wallpaper {
 # Add the type and apply the wallpaper
 Add-Type -TypeDefinition $code -Language CSharp
 [Wallpaper]::SystemParametersInfo(20, 0, $localPath, 3)
-
 $RegKeyPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 
 # Set Apps to Dark
