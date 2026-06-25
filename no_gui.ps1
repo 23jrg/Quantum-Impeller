@@ -44,7 +44,9 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
-(New-Object -ComObject Shell.Application).MinimizeAll()
+$shell = New-Object -ComObject "Shell.Application"
+$shell.MinimizeAll()
+
 
 
 # Notes down which user launched the script
