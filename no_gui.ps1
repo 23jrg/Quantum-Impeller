@@ -45,7 +45,7 @@ $shell = New-Object -ComObject "Shell.Application"
 $shell.MinimizeAll()
 
 #Jams
-cmd.exe /c 'start PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Volume.ps1" && start PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Music.ps1" && start cmd /k "color 2 && curl ascii.live/knot" && exit';
+C:\23jrg\Quantum-Impeller\Tools\Advanced_Tools\Loading.bat
 
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
