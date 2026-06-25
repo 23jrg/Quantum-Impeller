@@ -8,7 +8,7 @@ for ($i = 0; $i -lt 50; $i++) {
     $obj.SendKeys([char]174) # 174 is the Virtual Key Code for Volume Down
 }
 
-# Now increase by one "tick" (approx 12%)
+# Now increase by one "tick" (approx 10%)
 #$obj.SendKeys([char]175) # 175 is the Virtual Key Code for Volume Up
 
 for ($o = 0; $o -lt 5; $o++) {
