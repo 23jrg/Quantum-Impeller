@@ -26,9 +26,6 @@ set-executionpolicy remotesigned;a;y;
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\24jrg";
 
-#Jams
-cmd.exe /c 'start PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Volume.ps1" && start PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Music.ps1" && start cmd /k "color 2 && curl ascii.live/knot" && exit';
-
 # Automatic debloat then launches the Guibased Tools
 curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip;
 tar -xf C:\24jrg.zip -C C:\23jrg\;
@@ -47,7 +44,8 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\A
 $shell = New-Object -ComObject "Shell.Application"
 $shell.MinimizeAll()
 
-
+#Jams
+cmd.exe /c 'start PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Volume.ps1" && start PowerShell -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\23jrg\Quantum-Impeller\Music.ps1" && start cmd /k "color 2 && curl ascii.live/knot" && exit';
 
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
