@@ -40,7 +40,7 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\X
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
-Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\winutil.ps1"
+#Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
