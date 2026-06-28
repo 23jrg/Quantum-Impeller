@@ -21,7 +21,6 @@
                  "king.com.CandyCrushSodaSaga",
                  "Clipchamp.Clipchamp",
                  "COOKINGFEVER",
-                 "Microsoft.Copilot",
                  "Microsoft.Windows.AIHub",
                  "Microsoft.549981C3F5F10",
                  "CyberLinkMediaSuiteEssentials",
@@ -29,16 +28,15 @@
                  "DellInc.DellMobileConnect",
                  "DellInc.DellSupportAssistforPCs",
                  "Microsoft.Windows.DevHome",
-                 "Disney",
                  "DisneyMagicKingdoms",
+                 "Disney.37853FC22B2CE",
                  "DrawboardPDF",
                  "Duolingo-LearnLanguagesforFree",
                  "EclipseManager",
-                 "Facebook",
+                 "FACEBOOK.FACEBOOK",
                  "MicrosoftCorporationII.MicrosoftFamily",
                  "FarmVille2CountryEscape",
                  "Microsoft.WindowsFeedbackHub",
-                 "fitbit",
                  "Flipboard",
                  "Microsoft.Getstarted",
                  "HiddenCity",
@@ -63,45 +61,45 @@
                  "AD2F1837.HPWorkWell",
                  "HULULLC.HULUPLUS",
                  "iHeartRadio",
-                 "Instagram",
+                 "Facebook.Instagram",
+                 "E046963F.LenovoCompanion",
+                 "LenovoCompanyLimited.LenovoVantageService",
                  "LinkedInforWindows",
+                 "Sidia.LiveWallpaper",
+                 "Microsoft.windowscommunicationsapps",
                  "MarchofEmpires",
                  "Microsoft.Messaging",
+                 "XP9CXNGPPJ97XX",
                  "Microsoft.MicrosoftJournal",
                  "Microsoft.News",
                  "Microsoft.PCManager",
                  "Microsoft.Todos",
                  "Microsoft.MixedReality.Portal",
                  "Microsoft.ZuneVideo",
-                 "Netflix",
                  "NYTCrossword",
                  "Microsoft.MicrosoftOfficeHub",
                  "OneCalendar",
                  "Microsoft.OneConnect",
                  "Microsoft.Office.OneNote",
                  "PandoraMediaInc",
+                 "Microsoft.People",
                  "PhototasticCollage",
                  "PicsArt-PhotoStudio",
-                 "Plex",
                  "PolarrPhotoEditorAcademicEdition",
                  "Microsoft.MicrosoftPowerBIForWindows",
                  "AmazonVideo.PrimeVideo",
                  "Microsoft.Print3D",
-                 "Royal Revolt",
-                 "Shazam",
+                 "MicrosoftCorporationII.QuickAssist",
                  "Microsoft.SkypeApp",
                  "SlingTV",
                  "Microsoft.WindowsSoundRecorder",
                  "Microsoft.MicrosoftStickyNotes",
                  "Microsoft.Office.Sway",
-                 "TikTok",
+                 "BytedancePte.Ltd.TikTok",
                  "TuneInRadio",
-                 "Twitter",
-                 "Viber",
                  "Microsoft.WindowsMaps",
-                 "Wunderlist",
-                 "Microsoft.XboxApp",
-                 "XING"
+                 "WinZipUniversal",
+                 "Microsoft.XboxApp"
              ],
     "Tweaks":  [
                    {
@@ -114,6 +112,10 @@
                    },
                    {
                        "Value":  true,
+                       "Name":  "DisableBitlockerAutoEncryption"
+                   },
+                   {
+                       "Value":  true,
                        "Name":  "DisableTelemetry"
                    },
                    {
@@ -123,6 +125,10 @@
                    {
                        "Value":  true,
                        "Name":  "DisableLockscreenTips"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "HideHome"
                    },
                    {
                        "Value":  true,
@@ -139,6 +145,10 @@
                    {
                        "Value":  true,
                        "Name":  "AddFoldersToThisPC"
+                   },
+                   {
+                       "Value":  true,
+                       "Name":  "DisableEdgeAI"
                    },
                    {
                        "Value":  true,
@@ -163,10 +173,6 @@
                    {
                        "Value":  true,
                        "Name":  "EnableEndTask"
-                   },
-                   {
-                       "Value":  true,
-                       "Name":  "DisableEdgeAI"
                    },
                    {
                        "Value":  true,
@@ -211,10 +217,6 @@
                    {
                        "Value":  true,
                        "Name":  "DisablePaintAI"
-                   },
-                   {
-                       "Value":  true,
-                       "Name":  "HideHome"
                    }
                ],
     "Deployment":  [
