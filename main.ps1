@@ -42,6 +42,10 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\R
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
+# Minimize all open windows to allow the technician to begin work faster
+$shell = New-Object -ComObject "Shell.Application"
+$shell.MinimizeAll()
+
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
 
