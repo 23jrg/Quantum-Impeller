@@ -42,10 +42,6 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\R
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
-# Minimize all open windows to allow the technician to begin work faster
-$shell = New-Object -ComObject "Shell.Application"
-$shell.MinimizeAll()
-
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
 
@@ -158,6 +154,10 @@ winget install ZhornSoftware.Caffeine --source winget --force;
 
 # Refreshes the powershell path to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
+
+# Minimize all open windows to allow the technician to begin work faster
+$shell = New-Object -ComObject "Shell.Application"
+$shell.MinimizeAll()
 
 # Actives Caffeine, keeping the computer on for 15 mins while we work, sets computer to remain on for 15 mins after we sign in
 if (-not (Test-Path -Path "c:\users\$env:USERNAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine_wrk_hrs.lnk")) {
