@@ -125,6 +125,11 @@ foreach ($appname in $taskbarItems) {
     }
 }
 
+# Minimize all open windows to allow the technician to begin work faster
+$shell = New-Object -ComObject "Shell.Application"
+$shell.MinimizeAll()
+
+
 # Center taskbar
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
 
@@ -143,9 +148,6 @@ C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
 w32tm /resync /force
 Restart-Service w32time
 
-# Refreshes the powershell path to use winget
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
-
 # installs a program that keeps the computer from sleeping and then sets it to keep awake for 15 mins
 winget install ZhornSoftware.Caffeine --source winget --force;
 
@@ -154,10 +156,6 @@ winget install ZhornSoftware.Caffeine --source winget --force;
 
 # Refreshes the powershell path to use all the cool stuff we just added to it
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
-
-# Minimize all open windows to allow the technician to begin work faster
-$shell = New-Object -ComObject "Shell.Application"
-$shell.MinimizeAll()
 
 # Actives Caffeine, keeping the computer on for 15 mins while we work, sets computer to remain on for 15 mins after we sign in
 if (-not (Test-Path -Path "c:\users\$env:USERNAME\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\caffeine_wrk_hrs.lnk")) {
