@@ -142,7 +142,7 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 #w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
 
 # Set Timezone to EST
-C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
+# C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
 
 # Sync Clock
 w32tm /resync /force
