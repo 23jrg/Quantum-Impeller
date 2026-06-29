@@ -100,7 +100,7 @@ $shell = New-Object -ComObject "Shell.Application"
 $shell.MinimizeAll()
 
 #Set Timezone to EST
-C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
+#C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
 
 #Sync Clock
 w32tm /resync /force
