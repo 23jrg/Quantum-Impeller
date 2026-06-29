@@ -134,7 +134,7 @@ $shell.MinimizeAll()
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
 
 #Refresh the explorer process to apply changes without logging out
-#Stop-Process -Name explorer -Force
+Stop-Process -Name explorer -Force
 
 } 
 
