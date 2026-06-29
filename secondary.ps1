@@ -90,11 +90,14 @@ foreach ($appname in $taskbarItems) {
     }
 }
 
-
 #Center taskbar
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
 
 }
+
+# Minimize all open windows to allow the technician to begin work faster
+$shell = New-Object -ComObject "Shell.Application"
+$shell.MinimizeAll()
 
 #Set Timezone to EST
 C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
