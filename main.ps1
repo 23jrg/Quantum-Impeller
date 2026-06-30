@@ -125,9 +125,6 @@ foreach ($appname in $taskbarItems) {
     }
 }
 
-# Minimize all open windows to allow the technician to begin work faster
-(New-Object -ComObject shell.application).toggleDesktop()
-
 # Center taskbar
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
 
@@ -135,6 +132,9 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Stop-Process -Name explorer -Force
 
 } 
+
+# Minimize all open windows to allow the technician to begin work faster
+(New-Object -ComObject shell.application).toggleDesktop()
 
 #Set NTP pool time server
 #w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
