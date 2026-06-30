@@ -42,11 +42,11 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\R
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
-# Notes down which user launched the script
-C:\23jrg\Quantum-Impeller\quser.bat
-
 # Minimize all open windows to allow the technician to begin work faster
 (New-Object -ComObject shell.application).toggleDesktop()
+
+# Notes down which user launched the script
+C:\23jrg\Quantum-Impeller\quser.bat
 
 # Profile Customization
 if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
