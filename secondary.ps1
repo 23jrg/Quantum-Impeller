@@ -40,9 +40,6 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\R
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
-# Minimize all open windows to allow the technician to begin work faster
-(New-Object -ComObject shell.application).toggleDesktop()
-
 #Deployment Emailer gets placed on the Desktop
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
@@ -51,7 +48,7 @@ Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-A
 C:\23jrg\Quantum-Impeller\quser.bat
 
 # Minimize all open windows to allow the technician to begin work faster
-(New-Object -ComObject shell.application).toggleDesktop()
+(New-Object -ComObject Shell.Application).MinimizeAll()
 
 #Profile Customization
 if ($env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
