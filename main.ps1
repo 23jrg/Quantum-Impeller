@@ -45,6 +45,9 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\A
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
 
+# Minimize all open windows to allow the technician to begin work faster
+(New-Object -ComObject shell.application).toggleDesktop()
+
 # Profile Customization
 if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
 
@@ -132,9 +135,6 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 Stop-Process -Name explorer -Force
 
 } 
-
-# Minimize all open windows to allow the technician to begin work faster
-(New-Object -ComObject shell.application).toggleDesktop()
 
 #Set NTP pool time server
 #w32tm /config /syncfromflags:manual /manualpeerlist:"0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
