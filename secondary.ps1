@@ -40,16 +40,15 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\R
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
-# Minimize all open windows to allow the technician to begin work faster
-$shell = New-Object -ComObject "Shell.Application"
-$shell.MinimizeAll()
-
 #Deployment Emailer gets placed on the Desktop
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
 
 #Makes a .txt with the ID of the runner who ran this script (this is used later for cleanup)
 C:\23jrg\Quantum-Impeller\quser.bat
+
+# Minimize all open windows to allow the technician to begin work faster
+(New-Object -ComObject shell.application).toggleDesktop()
 
 #Profile Customization
 if ($env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
@@ -94,9 +93,6 @@ foreach ($appname in $taskbarItems) {
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
 
 }
-
-# Minimize all open windows to allow the technician to begin work faster
-(New-Object -ComObject shell.application).toggleDesktop()
 
 #Set Timezone to EST
 #C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
