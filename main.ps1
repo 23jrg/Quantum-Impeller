@@ -46,8 +46,24 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\A
 C:\23jrg\Quantum-Impeller\quser.bat
 
 # Minimize all open windows to allow the technician to begin work faster
-(New-Object -ComObject shell.application).ToggleDesktop()
 (New-Object -ComObject Shell.Application).MinimizeAll()
+
+Add-Type @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Win32 {
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+}
+"@
+
+$SW_MINIMIZE = 6
+$hwnd = [Win32]::GetForegroundWindow()
+[Win32]::ShowWindow($hwnd, $SW_MINIMIZE)
 
 # Profile Customization
 if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
