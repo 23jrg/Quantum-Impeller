@@ -98,7 +98,6 @@ Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer
 # Minimize all open windows to allow the technician to begin work faster
 (New-Object -ComObject shell.application).toggleDesktop()
 
-
 #Set Timezone to EST
 #C:\Windows\System32\tzutil.exe /s "Eastern Standard Time"
 
