@@ -126,9 +126,7 @@ foreach ($appname in $taskbarItems) {
 }
 
 # Minimize all open windows to allow the technician to begin work faster
-$shell = New-Object -ComObject "Shell.Application"
-$shell.MinimizeAll()
-
+(New-Object -ComObject shell.application).toggleDesktop()
 
 # Center taskbar
 Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 1
