@@ -1224,7 +1224,7 @@ function Disable-Registry-Keys {
     if (Test-Path $uwpPhotosSettings) {
         Write-Status -msg "$(@('Disabling','Enabling')[$revert]) AI in Photos App..."
         #need to open it once to make the settings.dat structure
-        Start-Process 'explorer.exe' 'shell:AppsFolder\Microsoft.Windows.Photos_8wekyb3d8bbwe!App' 
+        #Start-Process 'explorer.exe' 'shell:AppsFolder\Microsoft.Windows.Photos_8wekyb3d8bbwe!App' 
         Start-Sleep 5
         taskkill.exe /im Photos.exe /f *>$null
         <#
