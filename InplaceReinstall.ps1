@@ -166,7 +166,8 @@ for ($i = 0; $i -lt 30; $i++) {
 if ($OKButton) {
 
     Write-Host "OK button found."
-
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.SendKeys]::SendWait(" ")
     $Invoke = $null
 
     if ($OKButton.TryGetCurrentPattern(
