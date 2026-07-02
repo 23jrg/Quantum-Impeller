@@ -202,3 +202,5 @@ TIMEOUT /T 5
 
     Write-Warning "Timed out waiting for the OK button."
 }
+
+Stop-Process -Name "SystemSettings" -force
