@@ -5,7 +5,7 @@ FSUTIL DIRTY query %SystemDrive% >NUL || (
 )
 
 REM Queues up a windows reinstall on 24H2+ computers
-start powershell -file "C:\23jrg\Quantum-Impeller\tools\InplaceReinstall.ps1"
+start powershell -file "C:\23jrg\Quantum-Impeller\InplaceReinstall.ps1"
 
 TIMEOUT /T 15
 
