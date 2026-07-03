@@ -8,12 +8,12 @@ REM Launches a script in the backround that locks the computer if someone moves 
 start powershell -file "C:\23jrg\Quantum-Impeller\tools\Lock_on_mouse_movement.ps1"
 
 REM A series of powershell commands that suspends bitlocker, keeps the screen awake, disables the mouse until reboot (or reseat) then launches chkdsk, sfc, dism, Windows Update, and finally a reboot
-start /max powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 3;Caffeine -replace;foreach ($dev in (Get-PnpDevice | Where-Object{$_.Class -eq 'Mouse'})) {&'pnputil' /remove-device $dev.InstanceId};Start-Process cmd.exe -ArgumentList '/c chkdsk /scan /perf' -NoNewWindow -Wait;Start-Process cmd.exe -ArgumentList '/c sfc /scannow' -NoNewWindow -Wait;Start-Process cmd.exe -ArgumentList '/c dism /online /cleanup-image /restorehealth' -NoNewWindow -Wait;$RepairPack = Get-TroubleshootingPack -Path C:\Windows\diagnostics\system\WindowsUpdate;Invoke-TroubleshootingPack -Pack $RepairPack -Unattended;Install-Module PSWindowsUpdate -Force;Import-Module PSWindowsUpdate;Get-WindowsUpdate -Install -AcceptAll -AutoReboot"
+start /max /wait powershell -Command "Suspend-BitLocker -MountPoint 'C:' -RebootCount 3;Caffeine -replace;foreach ($dev in (Get-PnpDevice | Where-Object{$_.Class -eq 'Mouse'})) {&'pnputil' /remove-device $dev.InstanceId};Start-Process cmd.exe -ArgumentList '/c chkdsk /scan /perf' -NoNewWindow -Wait;Start-Process cmd.exe -ArgumentList '/c sfc /scannow' -NoNewWindow -Wait;Start-Process cmd.exe -ArgumentList '/c dism /online /cleanup-image /restorehealth' -NoNewWindow -Wait;$RepairPack = Get-TroubleshootingPack -Path C:\Windows\diagnostics\system\WindowsUpdate;Invoke-TroubleshootingPack -Pack $RepairPack -Unattended;Install-Module PSWindowsUpdate -Force;Import-Module PSWindowsUpdate;Get-WindowsUpdate -Install -AcceptAll -AutoReboot"
 
 TIMEOUT /T 15
 
 start powershell -file "C:\23jrg\Quantum-Impeller\InplaceReinstall.ps1"
 
-TIMEOUT /T 30
+TIMEOUT /T 35
 
 start powershell -Command "shutdown -r -t 1"
