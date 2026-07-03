@@ -9,6 +9,8 @@ start powershell -file "C:\23jrg\Quantum-Impeller\InplaceReinstall.ps1"
 
 TIMEOUT /T 23
 
+start powershell -Command "(New-Object -ComObject Shell.Application).MinimizeAll()"
+
 REM Launches a script in the backround that locks the computer if someone moves the mouse, useful for running the following repair commands onsite without having to worry about users messing with the computer while you're logged in
 start powershell -file "C:\23jrg\Quantum-Impeller\tools\Lock_on_mouse_movement.ps1"
 
