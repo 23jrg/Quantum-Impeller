@@ -169,7 +169,7 @@ if ($OKButton) {
 Add-Type -AssemblyName System.Windows.Forms
 [System.Windows.Forms.SendKeys]::SendWait(" ")
 
-TIMEOUT /T 5
+Start-Sleep -Seconds 8
 
     $Invoke = $null
 
