@@ -203,4 +203,4 @@ Start-Sleep -Seconds 8
     Write-Warning "Timed out waiting for the OK button."
 }
 
-Stop-Process -Name "SystemSettings" -force
+(New-Object -ComObject Shell.Application).MinimizeAll()
