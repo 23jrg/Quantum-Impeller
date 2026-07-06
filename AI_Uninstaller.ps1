@@ -3,8 +3,7 @@
 param(
     [switch]$EnableLogging,
     [switch]$nonInteractive,
-    [ValidateSet('DisableRegKeys',          
-        'PreventAIPackageReinstall',     
+    [ValidateSet('DisableRegKeys',     
         'DisableCopilotPolicies',       
         'RemoveAppxPackages',        
         'RemoveRecallFeature', 
