@@ -12,9 +12,10 @@ start /max /wait powershell -Command "Suspend-BitLocker -MountPoint 'C:' -Reboot
 
 TIMEOUT /T 75
 
-start /wait powershell -Command "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "IsExpedited" -Value 1;exit"
 start powershell -file "C:\23jrg\Quantum-Impeller\InplaceReinstall.ps1"
 
 TIMEOUT /T 35
+
+start /wait powershell -Command "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "IsExpedited" -Value 1;Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 0;exit"
 
 start powershell -Command "shutdown -r -t 1"
