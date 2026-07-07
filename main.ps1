@@ -232,6 +232,9 @@ $Shortcut.Save()
 # Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path C:\23jrg\Quantum-Impeller\qmr_settings.xml;
 
+# Sets troubleshooters to automatic
+reg add 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsMitigation' -v 'UserPreference' /t REG_DWORD -d 3 /f
+
 # Set Page File to automatically managed
 Set-CimInstance -Query "SELECT * FROM Win32_ComputerSystem" -Property @{AutomaticManagedPagefile=$True}
 
