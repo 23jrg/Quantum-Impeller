@@ -12,6 +12,8 @@ start /max /wait powershell -Command "Suspend-BitLocker -MountPoint 'C:' -Reboot
 
 IF EXIST "C:\23jrg\Quantum-Impeller\InplaceReinstall.ps1" (
 
+start /wait powershell -command "Start-Process "ms-settings:recovery""
+
 TIMEOUT /T 75
 
 start powershell -file "C:\23jrg\Quantum-Impeller\InplaceReinstall.ps1"
