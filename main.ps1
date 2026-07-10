@@ -40,7 +40,7 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\X
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
-#Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
+#Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\s\winutil.bat"
 
 # Notes down which user launched the script
 C:\23jrg\Quantum-Impeller\quser.bat
@@ -188,12 +188,15 @@ tar -xf C:\24jrg.zip -C C:\
 ren c:\Kick-Inactive-Users-main LogInactiveOff
 schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn LogInactiveOff;
 
-# Sets a copy of the Toolkit on the user's desktop
+# Sets a copy of the kit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
-$ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
+$Shortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
 $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
 $ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
+
+# Puts Office installers in the tech tools
+curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\OfficeInstallers
 
 # Puts a shortcut of Caffeine in the tech tools, set to stay active from 9:30-6:00
 $WshShell = New-Object -COMObject WScript.Shell
