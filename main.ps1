@@ -196,7 +196,7 @@ $ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
 
 # Puts Office installers in the tech tools
-curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\OfficeInstallers
+Start-process powershell.exe -WindowStyle Minimized "curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';mkdir C:\23jrg\Quantum-Impeller\tools\Office_Installers;tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Office_Installers"
 
 # Puts a shortcut of Caffeine in the tech tools, set to stay active from 9:30-6:00
 $WshShell = New-Object -COMObject WScript.Shell
