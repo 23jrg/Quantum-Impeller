@@ -141,7 +141,6 @@ $CaffeineShortcut.Save()
 $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User");
 
 #Pulls down a program that kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
-#git clone https://github.com/23jrg/Kick-Inactive-Users C:\23jrg\Kick-Inactive-Users
 curl -o C:\24jrg.zip https://github.com/23jrg/Kick-Inactive-Users/archive/refs/heads/main.zip;
 tar -xf C:\24jrg.zip -C C:\23jrg
 ren c:\23jrg\Kick-Inactive-Users-main Kick-Inactive-Users
@@ -152,6 +151,9 @@ $ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
 $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
 $ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
+
+# Puts Office installers in the tech tools
+Start-process powershell.exe -WindowStyle Minimized "curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';mkdir C:\23jrg\Quantum-Impeller\tools\Office_Installers;tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Office_Installers"
 
 #Creates an installer for the program and moves it to the desktop
 $WshShell = New-Object -COMObject WScript.Shell
