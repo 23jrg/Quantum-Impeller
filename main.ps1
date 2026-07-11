@@ -195,9 +195,6 @@ $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
 $ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
 
-# Puts Office installers in the tech tools
-Start-process powershell.exe -WindowStyle Minimized "curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';mkdir C:\23jrg\Quantum-Impeller\tools\Office_Installers;tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Office_Installers"
-
 # Puts a shortcut of Caffeine in the tech tools, set to stay active from 9:30-6:00
 $WshShell = New-Object -COMObject WScript.Shell
 $Caffeine_wrk_hrs = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\caffeine_wrk_hrs.lnk")
@@ -224,13 +221,16 @@ $Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\11_Upgrade
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
 
-#Deployment Emailer gets placed in the Tools folder
+# Deployment Emailer gets placed in the tools folder
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
 Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
 $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\Send_Deployment_Email.lnk")
 $Shortcut.TargetPath = "C:\23jrg\SendEmail.bat"
 $Shortcut.Save()
+
+# Office installers get placed in the tools folder
+Start-process powershell.exe -WindowStyle Minimized "curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';mkdir C:\23jrg\Quantum-Impeller\tools\Office_Installers;tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Office_Installers"
 
 # Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path C:\23jrg\Quantum-Impeller\qmr_settings.xml;
