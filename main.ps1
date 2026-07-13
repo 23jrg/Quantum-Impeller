@@ -190,7 +190,7 @@ schtasks.exe /Create /XML 'C:\LogInactiveOff\Log off inactive users.xml' /tn Log
 
 # Sets a copy of the kit on the user's desktop
 $WshShell = New-Object -COMObject WScript.Shell
-$Shortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
+$ToolShortcut = $WshShell.CreateShortcut("$Home\desktop\TechTools.lnk")
 $ToolShortcut.TargetPath = "C:\23jrg\Quantum-Impeller\Tools"
 $ToolShortcut.IconLocation = "C:\23jrg\Quantum-Impeller\favicon.ico"
 $ToolShortcut.Save()
