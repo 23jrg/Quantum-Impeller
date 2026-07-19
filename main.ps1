@@ -244,6 +244,9 @@ Set-CimInstance -Query "SELECT * FROM Win32_ComputerSystem" -Property @{Automati
 # Set fast startup to disabled
 reg add 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Power' -v 'HiberbootEnabled' /t REG_DWORD -d 0 /f
 
+# https://windowsforum.com/threads/lg-monitor-app-installer-pushes-mcafee-ads-on-windows-11.439030/
+reg add 'HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\Device Metadata' -v 'PreventDeviceMetadataFromNetwork' /t REG_DWORD -d 1 /f
+
 # Disable location popups for current technician and future users
 reg add 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\location' -v 'ShowGlobalPrompts' /t REG_DWORD -d 0 /f
 $DefaultHive = "$env:SystemDrive\Users\Default\NTUSER.DAT"
