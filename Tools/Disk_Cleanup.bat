@@ -25,9 +25,6 @@ start /wait powershell "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\
 REM Storage space run only when full disk
 start /wait powershell "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy -Name "2048" -Type DWord -Value 0"
 
-REM Clear items out of recycling bin if they've been there for 60 days
-start /wait powershell "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy -Name "08" -Type DWord -Value 1"
-
 REM Cleanup temporary files
 start /wait powershell "Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\StorageSense\Parameters\StoragePolicy -Name "04" -Type DWord -Value 1"
 
