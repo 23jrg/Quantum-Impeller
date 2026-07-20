@@ -6,16 +6,16 @@ start /wait powershell "Remove-Item -Path "$env:SystemRoot\Temp\*" -Recurse -For
 start powershell "net start wuauserv;net start bits"
 
 REM Checks all the disk cleanup options and runs disk cleanup
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Active Setup Temp Folders" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Internet Cache Files" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Old ChkDsk Files" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Previous Installations" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Recycle Bin" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Setup Log Files" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\System error memory dump files" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Temporary Files" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
-start /wait powershell "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Windows Error Reporting Archive" -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Active Setup Temp Folders' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Downloaded Program Files' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Internet Cache Files' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Old ChkDsk Files' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Previous Installations' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Recycle Bin' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Setup Log Files' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\System error memory dump files' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Temporary Files' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
+start /wait powershell "Set-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Windows Error Reporting Archive' -Name "StateFlags0001" -Value 2 -ErrorAction SilentlyContinue"
 start /wait powershell "Start-Process "cleanmgr.exe" -ArgumentList "/sagerun:1" -Wait"
 
 
