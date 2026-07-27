@@ -218,6 +218,84 @@ Remove-AppxPackage -Package $UserPackage.PackageFullName
 $ProvisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -like "*LGElectronics.LGMonitorApp*"}
 Remove-AppxProvisionedPackage -Online -PackageName $ProvisionedPackage.PackageName
 
+#Mcafee killer
+#Silently uninstall McAfee WebAdvisor (Common pre-installed bundle)
+Write-Host "`n[1/4] Checking for McAfee WebAdvisor..." -ForegroundColor Yellow
+$WebAdvisorPath = "C:\Program Files\McAfee\WebAdvisor\uninstaller.exe"
+if (Test-Path $WebAdvisorPath) {
+    Write-Host "Found WebAdvisor. Launching silent uninstaller..." -ForegroundColor Magenta
+    Start-Process -FilePath $WebAdvisorPath -ArgumentList "/s" -Wait -NoNewWindow
+    Write-Host "WebAdvisor uninstalled." -ForegroundColor Green
+} else {
+    Write-Host "McAfee WebAdvisor is not present." -ForegroundColor Gray
+}
+#Locate registry uninstall strings for standard McAfee Suites (LiveSafe / Total Protection)
+Write-Host "`n[2/4] Searching Registry for main McAfee Product Suites..." -ForegroundColor Yellow
+$RegPaths = @(
+    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+)
+$McAfeeApps = Get-ItemProperty $RegPaths -ErrorAction SilentlyContinue | 
+              Where-Object { $_.DisplayName -like "*McAfee*" -and $_.UninstallString -ne $null }
+if ($McAfeeApps) {
+    foreach ($App in $McAfeeApps) {
+        Write-Host "Found: $($App.DisplayName)" -ForegroundColor Magenta
+        #If it's an MSI installer, convert it to a silent command
+        if ($App.UninstallString -match "msiexec") {
+            $SilentArgs = $App.UninstallString -replace '(?i)/I', '/X'
+            $SilentArgs = "$SilentArgs /qn /norestart"
+            $SilentArgs = $SilentArgs -replace 'msiexec.exe ', ''
+            Write-Host "Running silent MSI executive sweep..." -ForegroundColor Yellow
+            Start-Process -FilePath "msiexec.exe" -ArgumentList $SilentArgs -Wait -NoNewWindow
+        } 
+        #For custom McAfee executable uninstallers, append standard silent flags
+        else {
+            #Extract executable path and arguments
+            if ($App.UninstallString -match '^"([^"]+)"(.*)$') {
+                $Exe = $Matches[1]
+                $Args = ($Matches[2] + " /s /silent /quiet /norestart").Trim()
+            } else {
+                $Parts = $App.UninstallString -split " ", 2
+                $Exe = $Parts[0]
+                $Args = ($Parts[1] + " /s /silent /quiet /norestart").Trim()
+            }
+            Write-Host "Invoking native uninstaller..." -ForegroundColor Yellow
+            Start-Process -FilePath $Exe -ArgumentList $Args -Wait -NoNewWindow -ErrorAction SilentlyContinue
+        }
+    }
+    Write-Host "Registry-initiated uninstalls complete." -ForegroundColor Green
+} else {
+    Write-Host "No standard McAfee desktop suites discovered in active registry hives." -ForegroundColor Gray
+}
+#Clean up Windows Store / UWP variants (McAfee Personal Security)
+Write-Host "`n[3/4] Purging McAfee Windows Store AppX Packages..." -ForegroundColor Yellow
+$StoreAppPattern = "*McAfee*"
+$AppX = Get-AppxPackage -AllUsers -Name $StoreAppPattern -ErrorAction SilentlyContinue
+if ($AppX) {
+    foreach ($Package in $AppX) {
+        Write-Host "Removing AppX Package: $($Package.PackageFullName)" -ForegroundColor Magenta
+        Remove-AppxPackage -AllUsers -Package $Package.PackageFullName -ErrorAction SilentlyContinue
+    }
+    #Clear provisioning layer so it won't reinstall on new users
+    Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like $StoreAppPattern } | ForEach-Object {
+        Remove-AppxProvisionedPackage -Online -PackageName $_.PackageName -ErrorAction SilentlyContinue
+    }
+    Write-Host "AppX packages purged." -ForegroundColor Green
+} else {
+    Write-Host "No McAfee Windows Store apps found." -ForegroundColor Gray
+}
+#Terminate and drop rogue core services if remnants remain
+Write-Host "`n[4/4] Culling stubborn background services..." -ForegroundColor Yellow
+$McAfeeServices = @("McComponentHostService", "meSvcHost", "McODS", "McShield", "McProxy", "mfevtp", "mfevtps", "WscMcAfeeConsumerService")
+foreach ($Svc in $McAfeeServices) {
+    if (Get-Service -Name $Svc -ErrorAction SilentlyContinue) {
+        Write-Host "Stopping and deleting service: $Svc" -ForegroundColor Magenta
+        Stop-Service -Name $Svc -Force -ErrorAction SilentlyContinue
+        sc.exe delete $Svc | Out-Null
+    }
+}
+Write-Host "`nMcafee TERMINATED!!!!" -ForegroundColor Green
+
 #Get the Current start time in UTC format, so that Time Zone Changes don't affect total runtime calculation
 $startUtc = [datetime]::UtcNow
 #no errors throughout
