@@ -212,6 +212,12 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
     Exit
 }
 
+#LG killer
+$UserPackage = Get-AppxPackage -Name "*LGElectronics.LGMonitorApp*" -ErrorAction SilentlyContinue
+Remove-AppxPackage -Package $UserPackage.PackageFullName
+$ProvisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -like "*LGElectronics.LGMonitorApp*"}
+Remove-AppxProvisionedPackage -Online -PackageName $ProvisionedPackage.PackageName
+
 #Get the Current start time in UTC format, so that Time Zone Changes don't affect total runtime calculation
 $startUtc = [datetime]::UtcNow
 #no errors throughout
