@@ -38,6 +38,9 @@ Remove-Item -Path "C:\23jrg" -Force -Recurse;
 # Removes the scheduled task responsible for retrying this script if it fails
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 
+# Resets execution policy
+Set-ExecutionPolicy Default
+
 # Removes this script
 Remove-Item $PSCommandPath -Force
 
