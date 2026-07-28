@@ -25,10 +25,12 @@ set-executionpolicy remotesigned -Scope Process -Force
 #Create an exclusion to prevent false positives
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\24jrg";
-#Automatic debloat then launches the Guibased Tools
-curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/heads/master.zip;
+
+# Automatic debloat then launches the Guibased Tools
+curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/tags/2026.07.11.zip;
 tar -xf C:\24jrg.zip -C C:\23jrg\;
-ren C:\23jrg\Win11Debloat-master win11debloat;
+ren C:\23jrg\Win11Debloat-2026.07.11 win11debloat;
+
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Startup_Cleaner.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\OneDrive_Cleanup.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
