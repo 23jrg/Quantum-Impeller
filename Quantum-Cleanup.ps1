@@ -22,12 +22,12 @@ Remove-Item -Path "C:\Users\$user_id\desktop\TechTools.lnk" -Force;
 # Removes the .zip file which was used for transferring the impeller to the computer
 Remove-Item -Path "C:\24jrg.zip" -Force -Recurse;
 
-# Requests the script to immediately stop if an error occurs, it will try again later if an error occurs
-$ErrorActionPreference = 'Stop'
-
 # Gets rid of any defender AV exclusions the script made
 Remove-MpPreference -ExclusionPath "C:\23jrg";
 Remove-MpPreference -ExclusionPath "C:\24jrg";
+
+# Requests the script to immediately stop if an error occurs, it will try again later if an error occurs
+$ErrorActionPreference = 'Stop'
 
 # Enforces the script to immediately stop if an error occurs, it will try again later if an error occurs
 $PSNativeCommandUseErrorActionPreference = $true
