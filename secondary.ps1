@@ -40,10 +40,6 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\R
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\tools\winutil.bat"
 
-#Deployment Emailer gets placed on the Desktop
-Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\SendEmail.bat" -Destination "C:\23jrg\"
-Copy-Item -Path "\\ve-fsvr\CIS_Internal_Data\Tools\DeploymentEmails\Send-Gmail-Auto.ps1" -Destination "C:\23jrg\"
-
 #Makes a .txt with the ID of the runner who ran this script (this is used later for cleanup)
 C:\23jrg\Quantum-Impeller\quser.bat
 
@@ -170,9 +166,6 @@ $WshShell = New-Object -COMObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("C:\23jrg\Quantum-Impeller\Tools\11_Upgrade_Tool.lnk")
 $Shortcut.TargetPath = "C:\23jrg\MediaCreationTool.bat\MediaCreationTool.bat"
 $Shortcut.Save()
-
-# Office installers get placed in the tools folder
-Start-process powershell.exe -WindowStyle Minimized "curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/fktoj3o64v403x17ccma5/ADpsfyO5LHjH5eEQdRzUzGE?rlkey=1uf44kexqpneguhwd6xyisbs4&st=inpfbgg2&dl=1';mkdir C:\23jrg\Quantum-Impeller\tools\Office_Installers;tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Office_Installers"
 
 #Set Quick Machine Recovery on 24h2+ computers
 reagentc.exe /setrecoverysettings /path C:\23jrg\Quantum-Impeller\qmr_settings.xml
