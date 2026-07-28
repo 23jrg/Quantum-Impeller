@@ -16,10 +16,6 @@ $user_id =  get-content "C:\23jrg\Quantum-Impeller\user_id.txt"
 # Logs off the person who ran the impeller
 logoff (get-content "C:\23jrg\Quantum-Impeller\session_id.txt");
 
-# Gets rid of any defender AV exclusions the script made
-Remove-MpPreference -ExclusionPath "C:\23jrg";
-Remove-MpPreference -ExclusionPath "C:\24jrg";
-
 # Removes the techtools shortcut from the desktop of the person who ran it
 Remove-Item -Path "C:\Users\$user_id\desktop\TechTools.lnk" -Force; 
 
@@ -28,6 +24,10 @@ Remove-Item -Path "C:\24jrg.zip" -Force -Recurse;
 
 # Requests the script to immediately stop if an error occurs, it will try again later if an error occurs
 $ErrorActionPreference = 'Stop'
+
+# Gets rid of any defender AV exclusions the script made
+Remove-MpPreference -ExclusionPath "C:\23jrg";
+Remove-MpPreference -ExclusionPath "C:\24jrg";
 
 # Enforces the script to immediately stop if an error occurs, it will try again later if an error occurs
 $PSNativeCommandUseErrorActionPreference = $true
