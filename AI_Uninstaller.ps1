@@ -1,4 +1,4 @@
-#-------CREDIT TO ZOICWARE, WATERED DOWN TO NOT TRIP AV-------
+#-------CREDIT TO ZOICWARE, DECREASED POWER-------
 
 param(
     [switch]$EnableLogging,
