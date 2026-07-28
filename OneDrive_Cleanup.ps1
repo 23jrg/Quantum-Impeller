@@ -42,14 +42,6 @@ foreach ($ProfilePath in $UserProfiles) {
 
 Write-Host "No files found in other users' local OneDrive directories. Continuing script execution..." -ForegroundColor Green
 
-[CmdletBinding()]
-param (
-    [switch]$CheckForUpdate,
-    [switch]$UpdateSelf,
-    [switch]$Version,
-    [switch]$Help
-)
-
 # Version
 $CurrentVersion = '1.0.2'
 $RepoOwner = 'asheroto'
