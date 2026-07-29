@@ -20,9 +20,10 @@ Rollback: This script removes all files after it's done
 AI-assisted: no
 
 .CHANGELOG
-V1.0 2025-07-29 23jrg Complience update
-v1.1 2025-07-29 23jrg: Enable logging
-v1.2 2025-07-29 23jrg: Set execution policy to match main.ps1
+V1.0 2026-07-29 23jrg Complience update
+v1.1 2026-07-29 23jrg: Enable logging
+v1.2 2026-07-29 23jrg: Set execution policy to match main.ps1
+v1.3 2026-07-29 23jrg: Set execution policy to match main.ps1
 #>
 
 # Enable logging
@@ -49,8 +50,8 @@ if (-not $isAdmin) {
 Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 
-# Set Execution Policy unrestricted
-set-executionpolicy unrestricted -Scope CurrentUser -Force
+# Set Execution Policy remotesigned
+set-executionpolicy remotesigned -Scope CurrentUser -Force
 
 # Automatic debloat then launches the Guibased Tools
 curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/tags/2026.07.11.zip;
