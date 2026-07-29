@@ -48,7 +48,7 @@ if (-not $isAdmin) {
 Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 
-# Set Execution Policy Remote Signed
+# Set Execution Policy unrestricted
 set-executionpolicy unrestricted -Scope CurrentUser -Force
 
 # Automatic debloat then launches the Guibased Tools
