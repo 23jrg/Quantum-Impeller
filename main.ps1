@@ -1,3 +1,28 @@
+<#
+.SYNOPSIS 
+This script terraforms a computer once ran, optimizing as it goes
+
+.DESCRIPTION 
+Windows ships broken. This script removes spyware, repairs damaged files, and enables settings to help the computer automatically recover if it enters a failstate. 
+This script also places a folder on the desktop with every manual tool a technician needs to repair common issues
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: 23jrg
+Created: 2025
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Admin
+Rollback: This script removes all files after it's done except for a script that saves performance with shared computers, this can be removed with C:\LogInactiveOff\uninstall.bat
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
+
 # Check if the current session is running as Administrator
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
