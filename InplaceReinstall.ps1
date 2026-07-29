@@ -1,3 +1,27 @@
+<#
+.SYNOPSIS 
+This script performs an in-place reinstall of windows
+
+.DESCRIPTION 
+Windows 24h2+ comes with a feature to re-install itself that can't be triggered through scripting, this script opperates the gui to actuate the buttons and perform the action automatically
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 11 workstations; single computer
+Requires: Ran while logged into computer
+Rollback: Not required
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
+
 # Open Windows Recovery Settings
 Start-Process "ms-settings:recovery"
 
