@@ -1,3 +1,27 @@
+goto :COMMENT_BLOCK
+.SYNOPSIS 
+This script repairs windows
+
+.DESCRIPTION 
+This script cleans the disk, removes temporary files, runs disk check,dism,sfc,downloads updates,enables automatic updates with a 15 minute warning,then re-installs windows
+
+.PARAMETER
+No parameters are accepted
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Admin
+Rollback: The update settings can be changed after running if needed
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+:COMMENT_BLOCK
+
 REM Prompts the user to re-launch this script with higher elevation
 FSUTIL DIRTY query %SystemDrive% >NUL || (
     PowerShell "Start-Process -FilePath '%0' -Verb RunAs"
