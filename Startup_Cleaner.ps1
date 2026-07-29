@@ -1,4 +1,27 @@
-#Experimental script designed to remove startup items and speed up boot time
+
+<#
+.SYNOPSIS 
+Windows can experience performance issues with many apps registered to start up as the computer turns on and remain running, even when not in use
+
+.DESCRIPTION 
+Experimental script designed to remove startup items and speed up boot time
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Administrator
+Rollback: Not required
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
 
 $Exceptions = @(
     "Caffeine",
