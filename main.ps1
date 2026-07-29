@@ -49,7 +49,7 @@ Remove-Item -Path "C:\Program Files\Quantum-Cleanup.ps1" -Force;
 schtasks.exe /delete /f /TN Quantum-Cleanup;
 
 # Set Execution Policy Remote Signed
-set-executionpolicy remotesigned -Scope Process -Force
+set-executionpolicy remotesigned -Scope CurrentUser -Force
 
 # Automatic debloat then launches the Guibased Tools
 curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/tags/2026.07.11.zip;
