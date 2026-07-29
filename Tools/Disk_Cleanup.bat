@@ -1,3 +1,27 @@
+goto :COMMENT_BLOCK
+.SYNOPSIS 
+This script removes temporary files
+
+.DESCRIPTION 
+This script removes temporary files and configures storage sense
+
+.PARAMETER
+No parameters are accepted
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Admin
+Rollback: Storage Sense can be changed in settings
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+:COMMENT_BLOCK
+
 REM Cleans up system files
 start /wait powershell "net stop wuauserv;net stop bits"
 start /wait powershell "Remove-Item $env:SystemRoot\SoftwareDistribution\* -Recurse -Force -Verbose -ErrorAction SilentlyContinue"
