@@ -1,4 +1,24 @@
-::credit to the mas activator, this script is unchanged
+::.SYNOPSIS 
+::This script repairs windows
+
+::.DESCRIPTION 
+::This script cleans the disk, removes temporary files, runs disk check,dism,sfc,downloads updates,enables automatic updates with a 15 minute warning,then re-installs windows
+
+::.PARAMETER
+::No parameters are accepted
+
+::.NOTES
+::Author: MASSGRAVEL
+::Created: 2025
+::Ticket: General ticket
+::Risk tier: Low
+::Targets: Windows 7/10/11 workstations; single computer
+::Requires: Local Admin
+::Rollback: Unneeded
+::AI-assisted: no
+
+::.CHANGELOG
+::V1.0 2025-07-29 23jrg Complience update
 
 @set masver=3.12
 @echo off
