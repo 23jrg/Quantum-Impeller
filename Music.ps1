@@ -1,3 +1,27 @@
+<#
+.SYNOPSIS 
+This script plays music
+
+.DESCRIPTION 
+This script downloads loading music and begins playing it, can be used on it's own but primarily intended for other scripts to call and play it while they're running
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Nothing needed
+Rollback: Not required
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
+
 #Checks if the .mp3 file already exists, if it doesn't then it pulls a copy from dropbox
 if (-not (Test-Path -Path "C:\23jrg\Music.mp3")) 
 {
