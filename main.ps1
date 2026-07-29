@@ -21,7 +21,11 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
+v1.1 2025-07-29 23jrg: Enable logging
 #>
+
+# Enable logging
+Start-Transcript -Path "C:\23jrg\ScriptLog_$(Get-Date -Format 'yyyy-MM-dd').log" -Append
 
 # Check if the current session is running as Administrator
 $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
@@ -275,3 +279,5 @@ Get-AppxPackage *Microsoft.CrossDeviceExperienceHost* | Remove-AppxPackage
 # Creates schedueled task to clean up leftovers and run a computer repair when the computer falls asleep
 schtasks.exe /Create /XML 'C:\23jrg\Quantum-Impeller\Quantum-Cleanup.xml' /tn Quantum-Cleanup;
 Move-Item -Path "C:\23jrg\Quantum-Impeller\Quantum-Cleanup.ps1" -Destination "C:\Program Files\"
+
+Stop-Transcript
