@@ -53,7 +53,7 @@
   <Actions Context="Author">
     <Exec>
       <Command>powershell.exe</Command>
-      <Arguments>Set-ExecutionPolicy Bypass -File "C:\Program Files\Quantum-Cleanup.ps1"</Arguments>
+      <Arguments>Set-ExecutionPolicy unrestricted -force;& 'C:\Program Files\Quantum-Cleanup.ps1'</Arguments>
     </Exec>
   </Actions>
 </Task>
