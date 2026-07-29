@@ -1,3 +1,28 @@
+<#
+.SYNOPSIS 
+The Impeller leaves behind some files, this script cleans them up
+
+.DESCRIPTION 
+This script removes leftover files and runs heavier repair processes after the computer locks, these heavier repair processes have a significant impact on performance
+so scheduling them to run when the computer is not in use is optimal
+
+.PARAMETER
+No parameters are accepted as this is a cleanup utility
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Nothing
+Rollback: The Impeller can be re-ran if needed
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
+
 # Repair routines to be run before residual impeller files are removed, 
 chkdsk /scan /perf;sfc /scannow;dism /online /cleanup-image /restorehealth;
 
