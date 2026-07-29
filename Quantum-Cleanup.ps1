@@ -21,7 +21,6 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
-v1.1 2025-07-29 23jrg: Removed Set-ExecutionPolicy Default as it's redundant since the scope of the execution policy was changed to the process only in the main and secondary scripts
 #>
 
 # Repair routines to be run before residual impeller files are removed, 
@@ -60,6 +59,9 @@ $PSNativeCommandUseErrorActionPreference = $true
 
 # Removes the main impeller folder
 Remove-Item -Path "C:\23jrg" -Force -Recurse;
+
+# Revert ExecutionPolicy changes
+Set-ExecutionPolicy Default -force
 
 # Removes the scheduled task responsible for retrying this script if it fails
 schtasks.exe /delete /f /TN Quantum-Cleanup;
