@@ -1,3 +1,28 @@
+goto :COMMENT_BLOCK
+.SYNOPSIS 
+This script restricts some more advanced tools that may cause issues in our environment
+
+.DESCRIPTION 
+This script restricts some more advanced tools that may cause issues in our environment but are needed for certain tasks, a code is needed to access these tools which can be found by editing this .bat file.
+The reason for the code is to prevent unknowledgable users from blindly or accidentally running the scripts contained within the Advanced_Tools folder and requires conscious effort to access
+
+.PARAMETER
+No parameters are accepted
+
+.NOTES
+Author: 23jrg
+Created: 2025
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Admin
+Rollback: The files downloaded will be cleared when the Impeller does
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+:COMMENT_BLOCK
+
 @echo off
 
 REM Prompts the user to re-launch this script with higher elevation
