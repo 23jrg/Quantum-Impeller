@@ -75,9 +75,9 @@ $localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
 Invoke-WebRequest -Uri $url -OutFile $localPath
 
 # Create the registry key if it does not exist
-if (!(Test-Path $cspPath)) {
-    New-Item -Path $cspPath -Force | Out-Null
-}
+# if (!(Test-Path $cspPath)) {
+#     New-Item -Path $cspPath -Force | Out-Null
+# }
 
 # Define the C# code to call the Windows API for an instant update
 $code = @"
