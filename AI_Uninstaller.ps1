@@ -1,4 +1,26 @@
-#-------CREDIT TO ZOICWARE, DECREASED POWER-------
+<#
+.SYNOPSIS 
+This script removes copilot bloat and prevents microsoft from saving screen activity https://support.microsoft.com/en-us/windows/ai/ai-features/retrace-your-steps-with-recall
+
+.DESCRIPTION 
+Windows ships with unneccessary AI intigration which hurts performance and sends your data back to microsoft to do with what they want
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: ZOICWARE
+Created: 2025
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 10/11 workstations; single computer
+Requires: Local Admin
+Rollback: Copilot can be reinstalled from the microsoft store if absolutely required
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
 
 param(
     [switch]$EnableLogging,
