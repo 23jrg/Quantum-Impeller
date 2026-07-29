@@ -20,12 +20,14 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
+v1.1 2025-07-29 23jrg: Reviewed and merged the latest build with this one
 #>
 
 param(
     [switch]$EnableLogging,
     [switch]$nonInteractive,
-    [ValidateSet('DisableRegKeys',     
+    [ValidateSet('DisableRegKeys',          
+        'PreventAIPackageReinstall',     
         'DisableCopilotPolicies',       
         'RemoveAppxPackages',        
         'RemoveRecallFeature', 
@@ -33,7 +35,7 @@ param(
         'RemoveAIFiles',               
         'HideAIComponents',            
         'DisableRewrite',       
-        'RemoveRecallTasks',
+        'RemoveWindowsAITasks',
         'UpdateCleanupCheck')]
     [array]$Options,
     [switch]$AllOptions,
@@ -41,7 +43,8 @@ param(
     [switch]$backupMode,
     [ValidateSet('photoviewer', 'mspaint', 'snippingtool', 'notepad', 'photoslegacy')]
     [array]$InstallClassicApps,
-    [switch]$RunWinUpdateRepair
+    [switch]$RunWinUpdateRepair,
+    [switch]$ExcludeOptions
 )
 
 if ($nonInteractive) {
@@ -80,50 +83,31 @@ if ($psversion -ge 7) {
     exit 1
 }
 
+#check if powershell is being "locked down" aka in ConstrainedLangauge mode
+if ($ExecutionContext.SessionState.LanguageMode -ne 'FullLanguage') {
+    Write-Host 'ERROR: PowerShell is running in ' -NoNewline -ForegroundColor Red
+    Write-Host "[$($ExecutionContext.SessionState.LanguageMode) Mode]!" -ForegroundColor Yellow
+    Write-Host 'In order for this script to run PowerShell needs to be in FullLanguage Mode!' -ForegroundColor Red
+    Write-Host "`nYou may be able to fix this by running the following command: reg delete `"HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment`" /v `"__PSLockdownPolicy`" /f" -ForegroundColor Red
+    Write-Host "`nPress Any Key to Exit..."
+    [System.Console]::ReadKey() >$null
+    exit 1
+}
+
 If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]'Administrator')) {
-    #leave out the trailing " to add supplied params first 
-    $arglist = "-NoProfile -ExecutionPolicy Bypass -C `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))"
-    #pass the correct params if supplied
-    if ($nonInteractive) {
-        $arglist = $arglist + ' -nonInteractive'
-
-        if ($AllOptions) {
-            $arglist = $arglist + ' -AllOptions'
+    #rebuild params from $MyInvocation.BoundParameters
+    $paramStr = $MyInvocation.BoundParameters.GetEnumerator() | ForEach-Object {
+        $val = $_.Value
+        $key = $_.Key
+        switch ($val) {
+            { $val -is [switch] -or $val -is [bool] } { "-$Key"; break }
+            { $val -is [array] } { "-$key $($val -join ',')"; break }
+            default { "-$key $val" }
         }
-
-        if ($revertMode) {
-            $arglist = $arglist + ' -revertMode'
-        }
-
-        if ($backupMode) {
-            $arglist = $arglist + ' -backupMode'
-        }
-
-
-        if ($Options -and $Options.count -ne 0) {
-            #if options and alloptions is supplied just do all options
-            if ($AllOptions) {
-                #double check arglist has all options (should already have it)
-                if (!($arglist -like '*-AllOptions*')) {
-                    $arglist = $arglist + ' -AllOptions'
-                }
-            }
-            else {
-                $arglist = $arglist + " -Options $Options"
-            }
-        }
-
-        if ($InstallClassicApps -and $InstallClassicApps.Count -ne 0) {
-            $arglist = $arglist + " -InstallClassicApps $InstallClassicApps"
-        }
+        
     }
 
-    if ($EnableLogging) {
-        $arglist = $arglist + ' -EnableLogging'
-    }
-
-    #add the trailing quote 
-    $arglist = $arglist + '"'
+    $arglist = "-NoProfile -ExecutionPolicy Bypass -C `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1'))) $($paramStr -join ' ')`""
     Start-Process PowerShell.exe -ArgumentList $arglist -Verb RunAs
     Exit	
 }
@@ -131,12 +115,29 @@ If (!([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]:
 Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName System.Windows.Forms
 
+#check if a third party av has replaced defender
+$productNames = (Get-WmiObject -Namespace root\SecurityCenter2 -Class AntiVirusProduct).displayName
+$thirdPartyAvName = $null
+if ($productNames.count -gt 1) {
+    $thirdPartyAvName = $productNames | Where-Object { $_ -ne 'Windows Defender' }
+}
+elseif ($productNames -ne 'Windows Defender') {
+    $thirdPartyAvName = $productNames
+}
+
+if ($thirdPartyAvName) {
+    Write-Host 'WARNING: A third-party anti-virus has been detected!' -ForegroundColor Yellow
+    Write-Host "The anti-virus: $thirdPartyAvName, may falsely block/break this script!" -ForegroundColor Yellow
+    Write-Host 'Please disable or uninstall this anti-virus temporarily or proceed with caution!' -ForegroundColor Yellow
+    Write-Host "`nPress Any Key to Continue..."
+    [System.Console]::ReadKey() >$null
+}
+
 function Run-Trusted([String]$command, $psversion) {
 
    Write-Host "Run-Trusted was called and ignored"
     
 }
-
 
 function Write-Status {
     param(
@@ -219,13 +220,11 @@ public static bool SetQuickEdit(bool SetEnabled){
 Add-Type -TypeDefinition $QuickEditCodeSnippet -Language CSharp
 
 
-function Set-QuickEdit() {
+function Set-QuickEdit {
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $false, HelpMessage = 'This switch will disable Console QuickEdit option')]
         [switch]$DisableQuickEdit = $false
     )
-
 
     if ([DisableConsoleQuickEdit]::SetQuickEdit($DisableQuickEdit)) {
         Write-Output 'QuickEdit settings has been updated.'
@@ -350,7 +349,7 @@ function Create-RestorePoint {
             $proc = Start-Process 'SystemPropertiesProtection.exe' -ErrorAction Stop -PassThru
         }
         catch {
-            $proc = Start-Process 'C:\Windows\System32\control.exe' -ArgumentList 'sysdm.cpl ,4' -PassThru
+            $proc = Start-Process "$env:windir\System32\control.exe" -ArgumentList 'sysdm.cpl ,4' -PassThru
         }
         #click configure on the window
         Start-Sleep 1
@@ -359,6 +358,26 @@ function Create-RestorePoint {
         Wait-Process -Id $proc.Id
     }
 
+}
+
+function Restart-Explorer {
+    try {
+        Stop-Process -name explorer -Force -ErrorAction Stop
+    }
+    catch {
+        #try taskkill instead if stop process doesnt work for some reason
+        taskkill.exe /F /IM 'explorer.exe' *>$null
+    }
+    #sleep for 10 seconds and start explorer if not auto starting
+    $time = 10
+    do {
+        $time--
+        Start-Sleep 1
+    }while (!(Get-Process explorer -ErrorAction SilentlyContinue) -and $time -ne 0)
+    if ($time -eq 0) {
+        Start-Process explorer
+    }
+  
 }
 
 function Set-UwpAppRegistryEntry {
@@ -379,14 +398,13 @@ function Set-UwpAppRegistryEntry {
     [CmdletBinding()]
     param
     (
-        [Parameter(Mandatory, ValueFromPipeline)]
+        [Parameter(ValueFromPipeline)]
         $InputObject,
-
-        [Parameter(Mandatory)]
         [string] $FilePath
     )
 
     begin {
+        $script:abort = $false
         $AppSettingsRegPath = 'HKEY_USERS\APP_SETTINGS'
         $RegContent = "Windows Registry Editor Version 5.00`n"
 
@@ -422,12 +440,16 @@ function Set-UwpAppRegistryEntry {
     
         if ($LASTEXITCODE -ne 0) {
             Write-Status -msg 'Unable to load settings.dat' -errorOutput
-            return
+            $script:abort = $true
+            return 2
         }
       
     }
 
     process {
+        if ($script:abort) {
+            return 2
+        }
         $Value = $InputObject.Value
         $Value = switch ($InputObject.Type) {
             '5f5e10b' { 
@@ -467,13 +489,30 @@ function Set-UwpAppRegistryEntry {
             $RegKey = "$($AppSettingsRegPath)\$($InputObject.Path)"
         }
         else {
-            $RegKey = (Get-ChildItem "registry::$AppSettingsRegPath" -Recurse | Where-Object { $_.pschildname -like '*Evoke' }).Name
+            try {
+                $RegKey = (Get-ChildItem "registry::$AppSettingsRegPath" -Recurse -ErrorAction Stop | Where-Object { $_.pschildname -like '*Evoke' }).Name
+                if (!$RegKey) {
+                    #go to catch when regkey is empty too
+                    throw
+                }
+            }
+            catch {
+                #early return when user has older version of photos app that doesnt have ai features
+                [gc]::Collect()
+                reg.exe UNLOAD $AppSettingsRegPath *>$null
+                $script:abort = $true
+                return 1
+            }
+            
         }
         $RegContent += "`n[$RegKey]
         ""$($InputObject.Name)""=hex($($InputObject.Type)):$Value,$Timestamp`n" -replace '(?m)^ *'
     }
 
     end {
+        if ($script:abort) {
+            return 1
+        }
         [gc]::Collect()
         $SettingRegFilePath = "$($tempDir)uwp_app_settings.reg"
         $RegContent | Out-File -FilePath $SettingRegFilePath
@@ -486,18 +525,14 @@ function Set-UwpAppRegistryEntry {
 }
 
 #function to edit group policies's pol file that contains all policies found in group policy editor 
-#this will update the ui to properly reflect what policies have been set to via reg
+#this will update the ui to properly reflect what policies have been set to via reg  
 function Edit-PolFile {
     param(
-        [Parameter(Mandatory)]
         [ValidateSet('HKLM', 'HKCU')]
         [string]$Hive,
-        [Parameter(Mandatory)]
         [ValidateSet('Add', 'Delete')]
         [string]$Action,
-        [Parameter(Mandatory)]
         [string]$Key,
-        [Parameter(Mandatory)]
         [string]$ValueName,
         [ValidateSet('DWORD', 'SZ')]
         [string]$Type,
@@ -636,33 +671,10 @@ public static class PolHandler {
 function Disable-Registry-Keys {
     #maybe add params for particular parts
 
-    #disable ai registry keys
     Write-Status -msg "$(@('Disabling', 'Enabling')[$revert]) Copilot and Recall..."
     <#
-    #new keys related to windows ai schedled task 
-    #npu check 
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'HardwareCompatibility' /t REG_DWORD /d '0' /f 
-    #dont know
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'ITManaged' /t REG_DWORD /d '0' /f
-    #enabled by windows ai schedled task 
-    #set to 1 in the us 
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'AllowedInRegion' /t REG_DWORD /d '0' /f
-    #enabled by windows ai schelded task 
-    # policy enabled = 1 when recall is enabled in group policy 
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'PolicyConfigured' /t REG_DWORD /d '0' /f
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'PolicyEnabled' /t REG_DWORD /d '0' /f
-    #dont know
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'FTDisabledState' /t REG_DWORD /d '0' /f
-    #prob the npu check failing
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'MeetsAdditionalDriverRequirements' /t REG_DWORD /d '0' /f
-    #sucess from last run 
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'LastOperationKind' /t REG_DWORD /d '2' /f
-    #doesnt install recall for me so 0
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'AttemptedInstallCount' /t REG_DWORD /d '0' /f
-    #windows build
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'LastBuild' /t REG_DWORD /d '7171' /f
-    #5 for no good reason
-    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration' /v 'MaxInstallAttemptsAllowed' /t REG_DWORD /d '5' /f
+    keys related to windows ai schedled task 
+'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsAI\LastConfiguration'  
     #>
     if (!$revert) {
         #removing it does not get remade on restart so we will just remove it for now 
@@ -672,6 +684,12 @@ function Disable-Registry-Keys {
         Reg.exe delete 'HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\Microsoft.Copilot_8wekyb3d8bbwe\Copilot.StartupTaskId' /f *>$null
         Reg.exe delete 'HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe\WebViewHostStartupId' /f *>$null
         Reg.exe delete 'HKCU\Software\Microsoft\Copilot' /v 'WakeApp' /f *>$null
+
+        #remove copilot run auto launch
+        $runNotiKey = (Get-Item 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunNotification').property | Where-Object { $_ -like '*MicrosoftCopilotAutoLaunch*' }
+        if ($runNotiKey) {
+            Remove-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunNotification' -Name $runNotiKey -Force
+        }
     }
 
     $aiPolicies = @()
@@ -740,6 +758,8 @@ function Disable-Registry-Keys {
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' /v 'ShowCopilotButton' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\input\Settings' /v 'InsightsEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Windows\Shell\ClickToDo' /v 'DisableClickToDo' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
+    Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\M365Copilot' /v 'AutoStartDelayEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\M365Copilot' /v 'IsCompanionWindowAvailable' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     #remove copilot from search
     Write-Status -msg "$(@('Disabling', 'Enabling')[$revert]) Copilot In Windows Search..."
     Reg.exe add 'HKCU\SOFTWARE\Policies\Microsoft\Windows\Explorer' /v 'DisableSearchBoxSuggestions' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
@@ -758,6 +778,10 @@ function Disable-Registry-Keys {
     Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'AIGenThemesEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'DevToolsGenAiSettings' /t REG_DWORD /d @('2', '1')[$revert] /f *>$null
     Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'ShareBrowsingHistoryWithCopilotSearchAllowed' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'AllowBrowsingWithCopilot' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'CopilotNewTabPageEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'M365LinksAutoOpenCopilotEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Edge' /v 'CopilotAddressBarSuggestionsEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     #disable edge copilot mode 
     # "enabled_labs_experiments":["edge-copilot-mode@2"]
     # view flags at edge://flags
@@ -815,11 +839,6 @@ function Disable-Registry-Keys {
     #disable connected experiences in office should prevent copilot from working 
     Reg.exe add 'HKCU\Software\Policies\Microsoft\office\16.0\common\privacy' /v 'controllerconnectedservicesenabled' /t REG_DWORD /d @('2', '1')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Policies\Microsoft\office\16.0\common\privacy' /v 'usercontentdisabled' /t REG_DWORD /d @('2', '1')[$revert] /f *>$null
-    #disable copilot buttons in word
-    #Reg.exe add 'HKCU\Software\Policies\Microsoft\office\16.0\word\disabledcmdbaritemslist' /v 'TCID1' /t REG_SZ /d '47229' /f
-    #Reg.exe add 'HKCU\Software\Policies\Microsoft\office\16.0\word\disabledcmdbaritemslist' /v 'TCID2' /t REG_SZ /d '43223' /f
-    #Reg.exe add 'HKCU\Software\Policies\Microsoft\office\16.0\word\disabledcmdbaritemslist' /v 'TCID3' /t REG_SZ /d '34872' /f
-    #Reg.exe add 'HKCU\Software\Policies\Microsoft\office\16.0\word\disabledcmdbaritemslist' /v 'TCID4' /t REG_SZ /d '42552' /f
     #disable copilot in word
     Reg.exe add 'HKCU\Software\Microsoft\Office\16.0\Word\Options' /v 'EnableCopilot' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     #disable copilot in excel
@@ -828,6 +847,19 @@ function Disable-Registry-Keys {
     Reg.exe add 'HKCU\Software\Microsoft\Office\16.0\OneNote\Options\Copilot' /v 'CopilotEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Office\16.0\OneNote\Options\Copilot' /v 'CopilotNotebooksEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Office\16.0\OneNote\Options\Copilot' /v 'CopilotSkittleEnabled' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    #disable copilot in power point
+    Reg.exe add 'HKCU\Software\Microsoft\Office\16.0\PowerPoint\Options' /v 'Enable Copilot in Settings' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    #copilot outlook cloud keys 
+    #NOTE: unsure the exact function of these
+    #checked value on start: 'HKEY_CURRENT_USER\Software\Policies\Microsoft\Cloud\Office\16.0\common\copilot' value: CopilotContentGeneration
+    Reg.exe add 'HKCU\Software\Policies\Microsoft\Cloud\Office\16.0\common\copilot' /v 'CopilotPinning' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    Reg.exe add 'HKCU\Software\Policies\Microsoft\Cloud\Office\16.0\common\copilot' /v 'PinningStateforCopilotApp' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
+    #same path but with some guid
+    $fullPath = Resolve-Path 'HKCU:\Software\Policies\Microsoft\*\Cloud\Office\16.0\common\copilot'
+    if ($fullPath) {
+        Set-ItemProperty $fullPath.Path -Name 'CopilotPinning' -Value @('0', '1')[$revert] -Force
+        Set-ItemProperty $fullPath.Path -Name 'PinningStateforCopilotApp' -Value @('0', '1')[$revert] -Force
+    }
     #disable office ai content safety
     Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\general' /v 'disablecontentsafety' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
     Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\office\16.0\common\ai\contentsafety\specific\alternativetext' /v 'disablecontentsafety' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
@@ -859,31 +891,6 @@ function Disable-Registry-Keys {
         Reg.exe add "$sid\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins" /v 'CopilotPWAPin' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
         Reg.exe add "$sid\Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband\AuxilliaryPins" /v 'RecallPin' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     }
-    #disable ai actions
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\1853569164' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\4098520719' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\929719951' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    #enable new feature to hide ai actions in context menu when none are avaliable 
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\1646260367' /v 'EnabledState' /t REG_DWORD /d @('2', '0')[$revert] /f *>$null
-    #disable additional ai velocity ids found from: https://github.com/phantomofearth/windows-velocity-feature-lists
-    #keep in mind these may or may not do anything depending on the windows build 
-    #disable copilot nudges
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\1546588812' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\203105932' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\2381287564' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\3189581453' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\3552646797' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    #disable copilot in taskbar and systray
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\3389499533' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\4027803789' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\450471565' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    #enable removing ai componets (not sure what this does yet)
-    #Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\2931206798' /v 'EnabledState' /t REG_DWORD /d '2' /f
-    #Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\3098978958' /v 'EnabledState' /t REG_DWORD /d '2' /f
-    #Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\3233196686' /v 'EnabledState' /t REG_DWORD /d '2' /f
-    #disable core ai / click to do with feature management 
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\2283032206' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    Reg.exe add 'HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\502943886' /v 'EnabledState' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
     #disable ask copilot (taskbar search)
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced' /v 'TaskbarCompanion' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
     #this branded key is blocked by the user choice driver too bad ms was very lazy and hardcoded a list of exe's not allowed to edit this key
@@ -905,17 +912,17 @@ function Disable-Registry-Keys {
     #disable office hub startup
     Reg.exe add 'HKCU\Software\Classes\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\SystemAppData\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe\WebViewHostStartupId' /v 'State' /t REG_DWORD /d @('1', '2')[$revert] /f *>$null
     #disable ai image creator in paint
-    #Write-Status -msg "$(@('Disabling', 'Enabling')[$revert]) Image Creator In Paint..."
+    Write-Status -msg "$(@('Disabling', 'Enabling')[$revert]) Image Creator In Paint..."
 
     #applying this policy causes paint to not open and none of the other policies actually do anything, nice one ms
     #additonal context: when the disable image creator policy is enabled mspaint.exe checks this policy and produces an event log error then exits...
-    #Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' /v 'DisableImageCreator' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
+    #seems to be fixed in 26200.8328
+    Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' /v 'DisableImageCreator' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
 
+    #these still do nothing
     #Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' /v 'DisableCocreator' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
     #Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' /v 'DisableGenerativeFill' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    #Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' /v 'DisableGenerativeErase' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    #Reg.exe add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Paint' /v 'DisableRemoveBackground' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-
+    
     # disable experimental agentic features
     # Reg.exe add "HKLM\SYSTEM\CurrentControlSet\Services\IsoEnvBroker" /v "Enabled" /t REG_DWORD /d "0" /f
     # Reg.exe add "HKLM\SYSTEM\ControlSet001\Services\IsoEnvBroker" /v "Enabled" /t REG_DWORD /d "0" /f
@@ -934,8 +941,260 @@ function Disable-Registry-Keys {
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View' /v 'GettingStartedGenerativeFillPageViewed' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View' /v 'GettingStartedImageCreatorPageViewed' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
     Reg.exe add 'HKCU\Software\Microsoft\Windows\CurrentVersion\Applets\Paint\View' /v 'GettingStartedCocreatorPageViewed' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
-    
 
+    #disable ai context menu extensions
+    #these clsids are not always the same despite what most people seem to think when using this method so we need to get them for the user
+    if ($revert) {
+        $keys = Get-ItemProperty 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' -ErrorAction SilentlyContinue  | Get-Member -ErrorAction SilentlyContinue | Where-Object { $_.Definition -like '*copilot*' -or $_.Definition -like '*designer*' }
+        if ($keys) {
+            foreach ($key in $keys) {
+                Reg.exe delete 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' /v "$($key.Name)" /f *>$null
+            }
+        }
+    }
+    else {
+        $aiContextMenus = @(
+            'AskM365Copilot'
+            'AskCopilot'
+            'CreateWithDesigner'
+        )
+        #some packages wont have a manifest file so check before getting its info
+        $packages = Get-AppxPackage -AllUsers | Where-Object { (Test-Path "$($_.InstallLocation)\AppXManifest.xml") -eq $true }
+        $contextMenuExtensions = ($packages | Get-AppxPackageManifest) | ForEach-Object { $_.package.Applications.Application.Extensions.Extension.FileExplorerContextMenus.itemtype.verb } | Select-Object  Id, Clsid -unique
+        foreach ($ext in $contextMenuExtensions) {
+            if ($aiContextMenus -contains $ext.Id) {
+                Reg.exe add 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' /v "{$($ext.Clsid)}" /t REG_SZ /d "$($ext.Id)" /f *>$null
+            }
+        }
+    }
+    #sfc should revert this and im not sure a clean way to get the velo ids back since they would be removed from the file
+    #also most likely this wont change anything for the user
+    if (!$revert) {
+        #Albacore.ViVe.ObfuscationHelpers (ViveTool) in powershell
+        #only need feature id -> obfuscated id for registry 
+        function SwapBytes32 {
+            param([uint32]$x)
+            $x = (($x -shr 16) -band 0xFFFFFFFF) -bor (($x -shl 16) -band 0xFFFFFFFF)
+            return ((($x -band 0xFF00FF00) -shr 8) -bor (($x -band 0x00FF00FF) -shl 8)) -band 0xFFFFFFFF
+        }
+
+        function RotateRight32 {
+            param([uint32]$value, [int]$shift)
+            #masks the shift amount to 0-31 for uint operands (shift & 31)
+            $s = (($shift % 32) + 32) % 32
+            if ($s -eq 0) { return $value }
+            return ((($value -shr $s) -bor ($value -shl (32 - $s))) -band 0xFFFFFFFF)
+        }
+
+        function ObfuscateFeatureId {
+            param([uint32]$FeatureId)
+            $step1 = ($FeatureId -bxor 0x74161A4E) -band 0xFFFFFFFF
+            $step2 = SwapBytes32 $step1
+            $step3 = ($step2 -bxor 0x8FB23D4F) -band 0xFFFFFFFF
+            $step4 = RotateRight32 -value $step3 -shift -1   # -1 & 31 = 31 -> rotate right 31 == rotate left 1
+            $step5 = ($step4 -bxor 0x833EA8FF) -band 0xFFFFFFFF
+            return [uint32]$step5
+        }
+
+
+        $settingsJSON = (Get-ChildItem -Path "$env:windir\SystemApps" -Recurse).FullName | Where-Object { $_ -like '*wsxpacks\Account\SettingsExtensions.json' }
+        if ($settingsJSON) {
+            'SystemSettings.exe', 'ShellExperienceHost.exe' | ForEach-Object { taskkill /f /im $_ *>$null }
+            
+            $jsonContent = Get-Content $settingsJSON | ConvertFrom-Json
+            $list = 'CopilotSubscriptionCard', 'CopilotSubscriptionCard_Enterprise'
+
+            if ($jsonContent.addedHomeCards) {
+                Write-Status -msg 'Removing Copilot Cards from Settings...'
+                #grab the velocity id and apply it to registry
+                #if this file gets repaired or replaced the feature management should prevent it from coming back
+                $veloIDs = $jsonContent.addedHomeCards | Where-Object { $list -contains $_.cardID } | ForEach-Object { $_.conditions.velocityKey } 
+                if ($veloIDs) {
+                    foreach ($veloID in $veloIDs) {
+                        #convert feature id to obfuscated reg id
+                        $regID = ObfuscateFeatureId $veloID.id
+                        #tested using vivetool /disable sets enabledstate to 1
+                        Reg.exe add "HKLM\SYSTEM\ControlSet001\Control\FeatureManagement\Overrides\8\$regID" /v 'EnabledState' /t REG_DWORD /d '1' /f *>$null
+                    }
+                }
+
+                #remove the cards from the json
+                $jsonContent.addedHomeCards = $jsonContent.addedHomeCards | Where-Object { $list -notcontains $_.cardId }
+
+                takeown /f $settingsJSON *>$null
+                icacls $settingsJSON /grant *S-1-5-32-544:F /t *>$null
+
+                $newContent = $jsonContent | ConvertTo-Json -Depth 100
+                Set-Content -Path $settingsJSON -Value $newContent -Force
+            }
+        }
+    }
+
+    if (!$revert) {
+        #unpin copilot 365 based on similar method from here: https://github.com/Freenitial/Pin-Taskbar
+        #since this is 'SystemPinned' theres no actual lnk file associated with the pin so we can just remove the AUMID
+        $Aumid = 'Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe!Microsoft.MicrosoftOfficeHub'
+
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+
+public class TaskbarUnpinByAumid {
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindow(string c, string w);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern IntPtr FindWindowEx(IntPtr p, IntPtr a, string c, string w);
+    [DllImport("user32.dll")] static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    public static int FindEntry(byte[] blob, string needleStr) {
+        byte[] needle = System.Text.Encoding.Unicode.GetBytes(needleStr);
+        int pos = 0; int idx = 0;
+        while (pos < blob.Length && blob[pos] != 0xFF) {
+            if (pos + 5 > blob.Length) break;
+            int pidlStart = pos + 5;
+            int pidlEnd = pidlStart + (int)BitConverter.ToUInt32(blob, pos + 1);
+            if (pidlEnd > blob.Length) break;
+            for (int b = pidlStart; b + needle.Length <= pidlEnd; b++) {
+                bool match = true;
+                for (int c = 0; c < needle.Length; c++) { if (blob[b + c] != needle[c]) { match = false; break; } }
+                if (match) return idx;
+            }
+            pos = pidlEnd; idx++;
+        }
+        return -1;
+    }
+
+    public static byte[] RemoveFavEntry(byte[] blob, int removeIdx) {
+        System.IO.MemoryStream ms = new System.IO.MemoryStream();
+        int pos = 0; int idx = 0;
+        while (pos < blob.Length && blob[pos] != 0xFF) {
+            if (pos + 5 > blob.Length) break;
+            int total = 5 + (int)BitConverter.ToUInt32(blob, pos + 1);
+            if (pos + total > blob.Length) break;
+            if (idx != removeIdx) ms.Write(blob, pos, total);
+            pos += total; idx++;
+        }
+        ms.WriteByte(0xFF);
+        return ms.ToArray();
+    }
+
+    public static byte[] RemoveResEntry(byte[] blob, int removeIdx) {
+        System.IO.MemoryStream ms = new System.IO.MemoryStream();
+        int pos = 0; int idx = 0;
+        while (pos + 4 <= blob.Length) {
+            uint linkSize = BitConverter.ToUInt32(blob, pos);
+            if (linkSize == 0 || pos + 4 + (int)linkSize > blob.Length) break;
+            if (idx != removeIdx) ms.Write(blob, pos, 4 + (int)linkSize);
+            pos += 4 + (int)linkSize; idx++;
+        }
+        return ms.ToArray();
+    }
+
+    public static void SendPinNotify() {
+        IntPtr reBar = FindWindowEx(FindWindow("Shell_TrayWnd", null), IntPtr.Zero, "ReBarWindow32", null);
+        IntPtr band  = FindWindowEx(reBar, IntPtr.Zero, "MSTaskSwWClass", null);
+        if (band != IntPtr.Zero) PostMessage(band, 0x446, IntPtr.Zero, IntPtr.Zero);
+    }
+}
+'@
+
+        Write-Status -msg 'Unpinning Copilot 365 from Taskbar...'
+        $TaskBand = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Software\Microsoft\Windows\CurrentVersion\Explorer\Taskband', $true)
+        $Favorites = $TaskBand.GetValue('Favorites', $null, 'DoNotExpandEnvironmentNames')
+        $FavoritesResolve = $TaskBand.GetValue('FavoritesResolve', $null, 'DoNotExpandEnvironmentNames')
+
+        try {
+            $Idx = [TaskbarUnpinByAumid]::FindEntry($Favorites, $Aumid)
+        }
+        catch {}
+        if ($Idx -lt 0 -or $Idx -eq $null) {
+            Write-Status -msg 'Copilot 365 is already unpinned...'
+            $TaskBand.Close()
+        }
+        else {
+            $Favorites = [TaskbarUnpinByAumid]::RemoveFavEntry($Favorites, $Idx)
+            if ($FavoritesResolve) { 
+                $FavoritesResolve = [TaskbarUnpinByAumid]::RemoveResEntry($FavoritesResolve, $Idx) 
+            }
+
+            $Changes = [int]$TaskBand.GetValue('FavoritesChanges', 0, 'DoNotExpandEnvironmentNames')
+            $TaskBand.SetValue('Favorites', $Favorites, 'Binary')
+            if ($FavoritesResolve) { 
+                $TaskBand.SetValue('FavoritesResolve', $FavoritesResolve, 'Binary') 
+            }
+            $TaskBand.SetValue('FavoritesVersion', 3, 'DWord')
+            $TaskBand.SetValue('FavoritesChanges', $Changes + 1, 'DWord')
+            $TaskBand.Close()
+            #refresh taskbar
+            [TaskbarUnpinByAumid]::SendPinNotify()
+        }
+
+
+        #unpin ai from startmenu
+        #only works 24h2+ since its using the configure start pins policy
+        #start only needs to read this policy's json file once to update the pinned app cache and then it can be removed
+        function Unpin-App {
+            param(
+                $json,
+                $pinnedApp,
+                $layoutPath
+            )
+            $unpinned = $false
+            foreach ($item in $json.pinnedList) {
+                if ($item.PSObject.Properties.Name -contains 'packagedAppId') {
+                    if ($item.packagedAppId -eq $pinnedApp) {
+                        $item.PSObject.Properties.Remove('packagedAppId')
+                        $unpinned = $true
+                    }
+                }
+            }
+            #remove empty properties.. not really needed for it to work but will cleanup the json
+            $json.pinnedList = @($json.pinnedList | Where-Object { @($_.PSObject.Properties).Count -gt 0 })
+
+            return $unpinned
+        }
+
+
+        $aiAppIds = @(
+            'MicrosoftWindows.Client.CoreAI_cw5n1h2txyewy!ClickToDoApp',
+            'Microsoft.Copilot_8wekyb3d8bbwe!App',
+            'Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe!Microsoft.MicrosoftOfficeHub'
+        )
+        #get the current pinned apps
+        $layoutPath = "$($tempDir)layouts.json"
+        Remove-Item $layoutPath -ErrorAction SilentlyContinue
+        try {
+            Export-StartLayout -Path $layoutPath -ErrorAction Stop
+
+            $json = Get-Content $layoutPath -Raw | ConvertFrom-Json
+
+            foreach ($pinnedApp in $aiAppIds) {
+                $result = Unpin-App -json $json -pinnedApp $pinnedApp -layoutPath $layoutPath
+            }
+
+            if ($result) {
+                Write-Status -msg 'Unpinning AI Apps from Start...'
+                #update layout json
+                $newJson = ConvertTo-Json $json -Depth 10 -Compress
+                Set-Content $layoutPath $newJson -Force
+                #apply policy and force start to refresh pinned app cache
+                Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer' /v 'ConfigureStartPins' /t REG_DWORD /d '1' /f >$null
+                Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer' /v 'ConfigureStartPinsJSON' /t REG_SZ /d "$layoutPath" /f >$null
+                Restart-Explorer
+                Start-Sleep 1
+                $wshell = New-Object -ComObject wscript.shell
+                $wshell.SendKeys('^{ESC}')
+                Reg.exe delete 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer' /v 'ConfigureStartPins' /f >$null
+                Reg.exe delete 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Explorer' /v 'ConfigureStartPinsJSON' /f >$null
+                $wshell.SendKeys('^{ESC}')
+            }
+            Remove-Item $layoutPath -Force -ErrorAction SilentlyContinue
+        }
+        catch {
+            Write-Status -msg 'Unable to export start pins! Skipping unpinning copilot from startmenu.' -errorOutput
+        }
+        
+    }
+    
+    
     #apply reg keys for default user to disable for any new users created
     #unload just incase
     [GC]::Collect()
@@ -981,23 +1240,11 @@ function Disable-Registry-Keys {
         Reg.exe add 'HKU\DefaultUser\Software\Microsoft\InputPersonalization' /v 'RestrictImplicitTextCollection' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
         Reg.exe add 'HKU\DefaultUser\Software\Microsoft\InputPersonalization\TrainedDataStore' /v 'HarvestContacts' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
         Reg.exe add 'HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\CPSS\Store\InkingAndTypingPersonalization' /v 'Value' /t REG_DWORD /d @('0', '1')[$revert] /f *>$null
-        if ($revert) {
-            Reg.exe delete 'HKU\DefaultUser\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' /v '{CB3B0003-8088-4EDE-8769-8B354AB2FF8C}' /f *>$null
-        }
-        else {
-            Reg.exe add 'HKU\DefaultUser\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' /v '{CB3B0003-8088-4EDE-8769-8B354AB2FF8C}' /t REG_SZ /d 'Ask Copilot' /f *>$null
-        }
-
+        
         reg.exe unload 'HKU\DefaultUser' *>$null
     }
 
-    #disable ask copilot in context menu
-    if ($revert) {
-        Reg.exe delete 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' /v '{CB3B0003-8088-4EDE-8769-8B354AB2FF8C}' /f *>$null
-    }
-    else {
-        Reg.exe add 'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Blocked' /v '{CB3B0003-8088-4EDE-8769-8B354AB2FF8C}' /t REG_SZ /d 'Ask Copilot' /f *>$null
-    }
+
     #Reg.exe add 'HKLM\SYSTEM\CurrentControlSet\Services\WSAIFabricSvc' /v 'Start' /t REG_DWORD /d @('4', '2')[$revert] /f *>$null
     try {
         Stop-Service -Name WSAIFabricSvc -Force -ErrorAction Stop
@@ -1026,10 +1273,10 @@ function Disable-Registry-Keys {
             if (!(Test-Path $backupPath)) {
                 New-Item $backupPath -Force -ItemType Directory | Out-Null
             }
-            #this will hang if the service has already been exported
-            # if (!(Test-Path "$backupPath\$backupFileWSAI")) {
-            Reg.exe export 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WSAIFabricSvc' "$backupPath\$backupFileWSAI" /y | Out-Null #add overwrite file /y switch
-            # }
+           
+            if (!(Test-Path "$backupPath\$backupFileWSAI")) {
+                Reg.exe export 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\WSAIFabricSvc' "$backupPath\$backupFileWSAI" /y | Out-Null #add overwrite file /y switch
+            }
         }
         Write-Status -msg 'Removing WSAIFabricSvc...'
         #delete the service
@@ -1052,10 +1299,10 @@ function Disable-Registry-Keys {
                 if (!(Test-Path $backupPath)) {
                     New-Item $backupPath -Force -ItemType Directory | Out-Null
                 }
-                #this will hang if the service has already been exported
-                # if (!(Test-Path "$backupPath\$backupFileAAR")) {
-                Reg.exe export 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AarSvc' "$backupPath\$backupFileAAR" /y | Out-Null
-                # }
+              
+                if (!(Test-Path "$backupPath\$backupFileAAR")) {
+                    Reg.exe export 'HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\AarSvc' "$backupPath\$backupFileAAR" /y | Out-Null
+                }
             }
             Write-Status -msg 'Removing Agent Activation Runtime Service...'
             #delete the service
@@ -1087,6 +1334,42 @@ function Disable-Registry-Keys {
         }
     }
   
+    #remove copilot elevation service
+    try {
+        Stop-Service -Name MicrosoftCopilotElevationService -Force -ErrorAction Stop
+    }
+    catch {
+        #ignore error when svc is already removed
+    }
+    
+    $backupPath = "$env:USERPROFILE\RemoveWindowsAI\Backup"
+    $backupFileCopilotSvc = 'CopilotSvc.reg'
+    if ($revert) {
+        if (Test-Path "$backupPath\$backupFileCopilotSvc") {
+            Reg.exe import "$backupPath\$backupFileCopilotSvc" *>$null
+            #sc.exe create WSAIFabricSvc binPath= "$env:windir\System32\svchost.exe -k WSAIFabricSvcGroup -p" *>$null
+        }
+        else {
+            Write-Status -msg "Path Not Found: $backupPath\$backupFileCopilotSvc" -errorOutput 
+        }
+        
+    }
+    else {
+        if ($backup) {
+            Write-Status -msg 'Backing up MicrosoftCopilotElevationService...'
+            #export the service to a reg file before removing it 
+            if (!(Test-Path $backupPath)) {
+                New-Item $backupPath -Force -ItemType Directory | Out-Null
+            }
+            if (!(Test-Path "$backupPath\$backupFileCopilotSvc")) {
+                Reg.exe export 'HKLM\SYSTEM\CurrentControlSet\Services\MicrosoftCopilotElevationService' "$backupPath\$backupFileCopilotSvc" /y | Out-Null #add overwrite file /y switch
+            }
+            
+        }
+        Write-Status -msg 'Removing MicrosoftCopilotElevationService...'
+        #delete the service
+        sc.exe delete MicrosoftCopilotElevationService *>$null
+    }
 
 
     #block copilot from communicating with server
@@ -1102,8 +1385,13 @@ function Disable-Registry-Keys {
     else {
         if ($backup) {
             #backup .copilot file extension
-            Reg.exe export 'HKEY_CLASSES_ROOT\.copilot' "$backupPath\HKCR_Copilot.reg" /y *>$null
-            Reg.exe export 'HKEY_CURRENT_USER\Software\Classes\.copilot' "$backupPath\HKCU_Copilot.reg" /y *>$null
+            if (!(Test-Path "$backupPath\HKCR_Copilot.reg")) {
+                Reg.exe export 'HKEY_CLASSES_ROOT\.copilot' "$backupPath\HKCR_Copilot.reg" /y *>$null
+            }
+            if (!(Test-Path "$backupPath\HKCU_Copilot.reg")) {
+                Reg.exe export 'HKEY_CURRENT_USER\Software\Classes\.copilot' "$backupPath\HKCU_Copilot.reg" /y *>$null
+            }
+            
         }
         Write-Status -msg 'Removing .copilot File Extension...' 
         Reg.exe delete 'HKCU\Software\Classes\.copilot' /f *>$null
@@ -1170,7 +1458,6 @@ function Disable-Registry-Keys {
 
     #disable gaming copilot 
     #found from: https://github.com/meetrevision/playbook/issues/197
-    #not sure this really does anything in my testing gaming copilot still appears 
     <#
     if ($revert) {
         $command = "reg delete 'HKLM\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId\Microsoft.Xbox.GamingAI.Companion.Host.GamingCompanionHostOptions' /f"
@@ -1185,7 +1472,7 @@ function Disable-Registry-Keys {
     #>
     
     if (!$revert) {
-        #better method by setting the gaming copilot widget to false in the xbox overlay settings json file
+        #better method than above by setting the gaming copilot widget to false in the xbox overlay settings json file
         #to make this actually work gamebar service needs to be restarted 
         $overlaySettingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.XboxGamingOverlay_8wekyb3d8bbwe\LocalState\profileDataSettings.txt"
         if (Test-Path $overlaySettingsPath) {
@@ -1220,7 +1507,7 @@ function Disable-Registry-Keys {
                     Set-Content $overlaySettingsPath -Value $newContent -Force
                 }
                 else {
-                    Write-Status -msg 'GamingCompanionWidget NOT Found in profileDataSettings.txt! Skipping...' -errorOutput
+                    Write-Status -msg 'GamingCompanionWidget NOT Found in profileDataSettings.txt! Skipping...' -warningOutput
                 }
             }
             catch {
@@ -1231,59 +1518,11 @@ function Disable-Registry-Keys {
     }
     
 
-    #remove windows ai dll contracts 
-    $command = "
-    Reg delete 'HKLM\SOFTWARE\Microsoft\WindowsRuntime\WellKnownContracts' /v 'Windows.AI.Actions.ActionsContract' /f
-    Reg delete 'HKLM\SOFTWARE\Microsoft\WindowsRuntime\WellKnownContracts' /v 'Windows.AI.Agents.AgentsContract' /f
-    Reg delete 'HKLM\SOFTWARE\Microsoft\WindowsRuntime\WellKnownContracts' /v 'Windows.AI.MachineLearning.MachineLearningContract' /f 
-    Reg delete 'HKLM\SOFTWARE\Microsoft\WindowsRuntime\WellKnownContracts' /v 'Windows.AI.MachineLearning.Preview.MachineLearningPreviewContract' /f
-    "
-    Run-Trusted -command $command -psversion $psversion
-
     #disable ai setting in uwp photos app
     $uwpPhotosSettings = "$env:LOCALAPPDATA\Packages\Microsoft.Windows.Photos_8wekyb3d8bbwe\Settings\settings.dat"
     if (Test-Path $uwpPhotosSettings) {
         Write-Status -msg "$(@('Disabling','Enabling')[$revert]) AI in Photos App..."
-        #need to open it once to make the settings.dat structure
-        #Start-Process 'explorer.exe' 'shell:AppsFolder\Microsoft.Windows.Photos_8wekyb3d8bbwe!App' 
-        Start-Sleep 5
-        taskkill.exe /im Photos.exe /f *>$null
-        <#
-        [GC]::Collect()
-        reg.exe unload 'HKU\TEMP' *>$null
-        #taskkill /im photos.exe /f *>$null
-        reg.exe load HKU\TEMP $uwpPhotosSettings >$null
-        if (!$revert) {
-            $regContent = @'
-Windows Registry Editor Version 5.00
-
-[HKEY_USERS\TEMP\LocalState] 
-"ImageCategorizationConsentDismissed"=hex(5f5e10c):74,00,72,00,75,00,65,00,00,\
-  00,4c,a0,89,0c,f7,2e,dc,01
-"ImageCategorizationConsent"=hex(5f5e10c):66,00,61,00,6c,00,73,00,65,00,00,00,\
-  6c,c4,53,ae,c5,51,dc,01
-'@
-        }
-        else {
-            $regContent = @'
-Windows Registry Editor Version 5.00
-
-[HKEY_USERS\TEMP\LocalState]
-"ImageCategorizationConsentDismissed"=hex(5f5e10c):74,00,72,00,75,00,65,00,00,\
-  00,4c,a0,89,0c,f7,2e,dc,01
-"ImageCategorizationConsent"=hex(5f5e10c):74,00,72,00,75,00,65,00,00,00,79,e7,\
-  fe,c5,c4,51,dc,01
-'@
-        }
-       
         
-        New-Item "$($tempDir)DisableAIPhotos.reg" -Value $regContent -Force | Out-Null
-        regedit.exe /s "$($tempDir)DisableAIPhotos.reg"
-        Start-Sleep 1
-        reg unload HKU\TEMP >$null
-        Remove-Item "$($tempDir)DisableAIPhotos.reg" -Force -ErrorAction SilentlyContinue
-        #>
-
         $photosSettingsBooleans = @(
             'OneDriveOnlineSearchFallbackFilter-IsEnabled'
             'ClipChampPromo-TeachingMoment-AlternateButtonBackground-IsEnabled'
@@ -1380,7 +1619,46 @@ Windows Registry Editor Version 5.00
                 Value = @('0', '1')[$revert] # 0 = disable    1 = enable
                 Type  = '5f5e10b'
             }
-            $setting | Set-UwpAppRegistryEntry -FilePath $uwpPhotosSettings
+            $result = $setting | Set-UwpAppRegistryEntry -FilePath $uwpPhotosSettings
+            if ($result -eq 1) {
+                #photos app may have never been opened before on this machine so open it once to create the settings.dat structure
+                Write-Status -msg 'Opening Photos App once to apply changes!' -warningOutput
+
+                #wait for photos app to fully open
+                try {
+                    $photos = Start-Process 'ms-photos:' -PassThru -ErrorAction Stop
+                }
+                catch {
+                    #this version of photos is a weird placeholder app that requires the user to install the latest version from the store
+                    Write-Status -msg 'This version of Photos App needs to be fully updated from the store to unlock AI features...' -errorOutput
+                    taskkill.exe /im Microsoft.Lightbox.exe /f *>$null
+                    break
+                }
+                
+                #on slow machines this will kill photos app too soon not allowing it to write to settings.dat creating the structure 
+                #so wait here until settings.dat is larger than 8kb (default size for all settings.dat files)
+                Write-Status -msg 'Waiting 1 minute max...'
+                $maxTimeOut = 0
+                while (((Get-Item $uwpPhotosSettings).Length -eq 8192) -and $maxTimeOut -lt 60) {
+                    Start-Sleep 1
+                    $photos.Refresh()
+                    $maxTimeOut++
+                }
+                taskkill.exe /im Photos.exe /f *>$null
+
+                if ($maxTimeOut -ge 60) {
+                    Write-Status -msg 'Max timeout reached! Photos app was most likely updating while this script was running... reboot and run this again to apply!' -errorOutput
+                    break
+                }
+                
+                #now retry and if it fails again then this version doesnt have ai features
+                $result = $setting | Set-UwpAppRegistryEntry -FilePath $uwpPhotosSettings
+                if ($result -eq 1) {
+                    Write-Status -msg 'No AI Features in this version of Photos...' -errorOutput
+                    break
+                }
+            }
+             
         }
     }
 
@@ -1415,7 +1693,46 @@ Windows Registry Editor Version 5.00
      
     }
     
+    #disable ai features when npu is detected in snipping tool
+    $settingsDat = "$env:LOCALAPPDATA\Packages\Microsoft.ScreenSketch_8wekyb3d8bbwe\Settings\settings.dat"
+    if (Test-Path $settingsDat) {
+        Write-Status -msg "$(@('Disabling','Enabling')[$revert]) Click to Do in Snipping Tool..."
+        Stop-Process -Name SnippingTool -Force -ErrorAction SilentlyContinue
+        $setting = [PSCustomObject]@{
+            Name  = 'DeviceHasNpu'
+            Path  = 'LocalState'
+            Value = @('0', '1')[$revert] # 0 = disable    1 = enable
+            Type  = '5f5e104'
+        }
+            
+        $setting | Set-UwpAppRegistryEntry -FilePath $settingsDat
+    }
 
+    #remove the ask copilot button from desktop spotlight
+    #NOTE: theres also a defaultcreatives key that doesnt seem to have ask copilot in it but will also reset the spotlight images
+    #so instead of just using the default one we can remove ask copilot from the json for each image
+    if (!$revert) {
+        $spotlightConfigPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\DesktopSpotlight\Creatives'
+        if (Test-Path $spotlightConfigPath) {
+            try {
+                $json = Get-ItemPropertyValue $spotlightConfigPath -Name 'Creatives' -ErrorAction Stop | ConvertFrom-Json
+                Write-Status -msg 'Removing Ask Copilot from Desktop Spotlight...'
+                foreach ($item in $json.ad) {
+                    if ($item.relatedContent) {
+                        $item.relatedContent = $item.relatedContent | Where-Object { $_.label -ne 'Ask Copilot' }
+                    }
+                }
+
+                $newjson = $json | ConvertTo-Json -Depth 20 -Compress
+                Set-ItemProperty $spotlightConfigPath -Name 'Creatives' -Value $newjson -Force
+            }
+            catch {
+                #creatives does not exist
+            }
+            
+        }
+    }
+    
     #force policy changes
     Write-Status -msg 'Applying Registry Changes...'
     gpupdate /force /wait:0 >$null
@@ -1425,7 +1742,105 @@ Windows Registry Editor Version 5.00
 
 
 function Install-NOAIPackage {
+    
+    if (!$revert) {
+        $package = Get-WindowsPackage -Online | Where-Object { $_.PackageName -like '*zoicware*' }
+        if (!$package) {
+            #check cpu arch
+            $arm = ((Get-CimInstance -Class Win32_ComputerSystem).SystemType -match 'ARM64') -or ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64')
+            $arch = if ($arm) { 'arm64' } else { 'amd64' }
+            #add cert to registry
+            $certRegPath = 'HKLM:\Software\Microsoft\SystemCertificates\ROOT\Certificates\8A334AA8052DD244A647306A76B8178FA215F344'
+            if (!(Test-Path "$certRegPath")) {
+                New-Item -Path $certRegPath -Force | Out-Null
+            }
+
+            #check if script is being ran locally 
+            if ((Test-Path "$PSScriptRoot\RemoveWindowsAIPackage\amd64") -and (Test-Path "$PSScriptRoot\RemoveWindowsAIPackage\arm64")) {
+                Write-Status -msg 'RemoveWindowsAI Packages Found Locally...'
+
+                Write-Status -msg 'Installing RemoveWindowsAI Package...'
+                try {
+                    Add-WindowsPackage -Online -PackagePath "$PSScriptRoot\RemoveWindowsAIPackage\$arch\ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" -NoRestart -IgnoreCheck -ErrorAction Stop >$null
                 }
+                catch {
+                    #user is using powershell 7 use dism command as fallback
+                    dism.exe /Online /Add-Package /PackagePath:"$PSScriptRoot\RemoveWindowsAIPackage\$arch\ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" /NoRestart /IgnoreCheck >$null
+                }
+           
+            }
+            else {
+                Write-Status -msg 'Downloading RemoveWindowsAI Package From Github...'
+                $ProgressPreference = 'SilentlyContinue'
+                try {
+                    Invoke-WebRequest -Uri "https://github.com/zoicware/RemoveWindowsAI/raw/refs/heads/main/RemoveWindowsAIPackage/$arch/ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" -OutFile "$($tempDir)ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" -UseBasicParsing -ErrorAction Stop
+                }
+                catch {
+                    Write-Status -msg "Unable to Download Package at: https://github.com/zoicware/RemoveWindowsAI/raw/refs/heads/main/RemoveWindowsAIPackage/$arch/ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" -errorOutput
+                    return
+                }
+
+                Write-Status -msg 'Installing RemoveWindowsAI Package...'
+                try {
+                    Add-WindowsPackage -Online -PackagePath "$($tempDir)ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" -NoRestart -IgnoreCheck -ErrorAction Stop >$null
+                }
+                catch {
+                    dism.exe /Online /Add-Package /PackagePath:"$($tempDir)ZoicwareRemoveWindowsAI-$($arch)1.0.0.0.cab" /NoRestart /IgnoreCheck >$null
+                }
+            }
+        }
+        else {
+            Write-Status -msg 'Update package already installed...'
+        }
+        
+        Write-Status -msg 'Checking update package install status...'
+        $package = Get-WindowsPackage -Online | Where-Object { $_.PackageName -like '*zoicware*' }
+        if ($package.PackageState -eq 'InstallPending') {
+            Write-Status -msg 'Package installed incorrectly... Uninstalling!' -errorOutput
+            try {
+                Remove-WindowsPackage -Online -PackageName $package.PackageName -NoRestart -ErrorAction Stop
+            }
+            catch {
+                dism.exe /Online /remove-package /PackageName:$($package.PackageName) /NoRestart
+            }
+            #remove reg install location 
+            $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages'
+            Get-ChildItem $regPath | ForEach-Object {
+                $value = try { Get-ItemProperty "registry::$($_.Name)" -ErrorAction Stop } catch { $null }
+                if ($value -and $value.PSPath -like '*zoicware*') {
+                    Remove-Item -Path $value.PSPath -Recurse -Force
+                }
+            }
+        }
+    }
+    else {
+        
+        $package = Get-WindowsPackage -Online | Where-Object { $_.PackageName -like '*zoicware*' }
+        if ($package) {
+            Write-Status 'Removing Custom Windows Update Package...' 
+            try {
+                Remove-WindowsPackage -Online -PackageName $package.PackageName -NoRestart -ErrorAction Stop
+            }
+            catch {
+                dism.exe /Online /remove-package /PackageName:$($package.PackageName) /NoRestart
+            }
+            #remove reg install location 
+            $regPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\Packages'
+            Get-ChildItem $regPath | ForEach-Object {
+                $value = try { Get-ItemProperty "registry::$($_.Name)" -ErrorAction Stop } catch { $null }
+                if ($value -and $value.PSPath -like '*zoicware*') {
+                    Remove-Item -Path $value.PSPath -Recurse -Force
+                }
+            }
+            
+        }
+        else {
+            Write-Status 'Unable to Find Update Package...' -errorOutput 
+        }
+        
+    }
+
+}
 
     
     
@@ -1677,6 +2092,11 @@ function Download-AppxPackage {
 function Remove-AI-Appx-Packages {
 
     if ($revert) {
+        Reg.exe delete 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Microsoft.Copilot_8wekyb3d8bbwe' /f *>$null
+        Reg.exe delete 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe' /f *>$null
+        Reg.exe delete 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Clipchamp.Clipchamp_yxz26nhyzhsrt' /f *>$null
+        Reg.exe delete 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages' /v 'DynamicRemovalList' /f *>$null
+         
 
         #download appx packages from store
         $appxBackup = "$env:USERPROFILE\RemoveWindowsAI\Backup\AppxBackup"
@@ -1711,7 +2131,6 @@ function Remove-AI-Appx-Packages {
             New-Item $packageRemovalPath -Force | Out-Null
         }
 
-        #needed for separate powershell sessions
         $aipackages = @(
             # 'MicrosoftWindows.Client.Photon'
             'MicrosoftWindows.Client.AIX'
@@ -1725,39 +2144,42 @@ function Remove-AI-Appx-Packages {
             'aimgr'
             'Microsoft.WritingAssistant'
             'Clipchamp.Clipchamp'
-            #ai component packages installed on copilot+ pcs
+            'Microsoft.AIFabric.CBS*'
             'MicrosoftWindows.*.Voiess'
             'MicrosoftWindows.*.Speion'
             'MicrosoftWindows.*.Livtop'
             'MicrosoftWindows.*.InpApp'
             'MicrosoftWindows.*.Filons'
-            'WindowsWorkload.Data.Analysis.Stx.*'
+            #ai component packages installed on copilot+ pcs
+            'WindowsWorkload.Data.Analysis*'
             'WindowsWorkload.Manager.*'
-            'WindowsWorkload.PSOnnxRuntime.Stx.*'
-            'WindowsWorkload.PSTokenizer.Stx.*'
+            'WindowsWorkload.PSOnnxRuntime*'
+            'WindowsWorkload.PSTokenizer*'
             'WindowsWorkload.QueryBlockList.*'
-            'WindowsWorkload.QueryProcessor.Data.*'
-            'WindowsWorkload.QueryProcessor.Stx.*'
-            'WindowsWorkload.SemanticText.Data.*'
-            'WindowsWorkload.SemanticText.Stx.*'
-            'WindowsWorkload.Data.ContentExtraction.Stx.*'
-            'WindowsWorkload.ScrRegDetection.Data.*'
-            'WindowsWorkload.ScrRegDetection.Stx.*'
-            'WindowsWorkload.TextRecognition.Stx.*'
-            'WindowsWorkload.Data.ImageSearch.Stx.*'
-            'WindowsWorkload.ImageContentModeration.*'
-            'WindowsWorkload.ImageContentModeration.Data.*'
-            'WindowsWorkload.ImageSearch.Data.*'
-            'WindowsWorkload.ImageSearch.Stx.*'
-            'WindowsWorkload.ImageTextSearch.Data.*'
-            'WindowsWorkload.PSOnnxRuntime.Stx.*'
-            'WindowsWorkload.PSTokenizerShared.Data.*'
-            'WindowsWorkload.PSTokenizerShared.Stx.*'
-            'WindowsWorkload.ImageTextSearch.Stx.*'
+            'WindowsWorkload.QueryProcessor*'
+            'WindowsWorkload.SemanticText*'
+            'WindowsWorkload.Data.ContentExtraction*'
+            'WindowsWorkload.ScrRegDetection*'
+            'WindowsWorkload.TextRecognition*'
+            'WindowsWorkload.Data.ImageSearch*'
+            'WindowsWorkload.ImageContentModeration*'
+            'WindowsWorkload.ImageSearch*'
+            'WindowsWorkload.PSTokenizerShared*'
+            'WindowsWorkload.ImageTextSearch*'
+            'WindowsWorkload.SettingsModel*'
+            'WindowsWorkload.Data.PhiSilica*'
+            'WindowsWorkload.EP.Qualcomm*'
+            'WindowsWorkload.ImageDescription*'
+            'WindowsWorkload.ImageLLMAdapter*'
+            'WindowsWorkload.LanguageModel*'
+            'WindowsWorkload.SessionManager*'
+            'WindowsWorkload.TextContentModeration*'
+            'WindowsWorkload.WinMLShared*'
+            'WindowsWorkload.Data.SettingsModel*'
+            'MicrosoftCorporationII.WinML.Qualcomm*'
         )
 
         if ($backup) {
-
             #create file with package family names for reverting
             $appxBackup = "$env:USERPROFILE\RemoveWindowsAI\Backup\AppxBackup"
             if (!(Test-Path $appxBackup)) {
@@ -1774,49 +2196,10 @@ function Remove-AI-Appx-Packages {
         }
 
         $code = @'
-$aipackages = @(
-    'MicrosoftWindows.Client.AIX'
-    'MicrosoftWindows.Client.CoPilot'
-    'Microsoft.Windows.Ai.Copilot.Provider'
-    'Microsoft.Copilot'
-    'Microsoft.MicrosoftOfficeHub'
-    'MicrosoftWindows.Client.CoreAI'
-    'Microsoft.Edge.GameAssist'
-    'Microsoft.Office.ActionsServer'
-    'aimgr'
-    'Clipchamp.Clipchamp'
-    'Microsoft.WritingAssistant'
-    'MicrosoftWindows.*.Voiess'
-    'MicrosoftWindows.*.Speion'
-    'MicrosoftWindows.*.Livtop'
-    'MicrosoftWindows.*.InpApp'
-    'MicrosoftWindows.*.Filons'
-    'WindowsWorkload.Data.Analysis.Stx.*'
-    'WindowsWorkload.Manager.*'
-    'WindowsWorkload.PSOnnxRuntime.Stx.*'
-    'WindowsWorkload.PSTokenizer.Stx.*'
-    'WindowsWorkload.QueryBlockList.*'
-    'WindowsWorkload.QueryProcessor.Data.*'
-    'WindowsWorkload.QueryProcessor.Stx.*'
-    'WindowsWorkload.SemanticText.Data.*'
-    'WindowsWorkload.SemanticText.Stx.*'
-    'WindowsWorkload.Data.ContentExtraction.Stx.*'
-    'WindowsWorkload.ScrRegDetection.Data.*'
-    'WindowsWorkload.ScrRegDetection.Stx.*'
-    'WindowsWorkload.TextRecognition.Stx.*'
-    'WindowsWorkload.Data.ImageSearch.Stx.*'
-    'WindowsWorkload.ImageContentModeration.*'
-    'WindowsWorkload.ImageContentModeration.Data.*'
-    'WindowsWorkload.ImageSearch.Data.*'
-    'WindowsWorkload.ImageSearch.Stx.*'
-    'WindowsWorkload.ImageSearch.Stx.*'
-    'WindowsWorkload.ImageTextSearch.Data.*'
-    'WindowsWorkload.PSOnnxRuntime.Stx.*'
-    'WindowsWorkload.PSTokenizerShared.Data.*'
-    'WindowsWorkload.PSTokenizerShared.Stx.*'
-    'WindowsWorkload.ImageTextSearch.Stx.*'
-    'WindowsWorkload.ImageTextSearch.Stx.*'
-)
+        param(
+            [string]$aipackages
+        )
+$aipackagesarray = $aipackages -split ','
 
 $provisioned = get-appxprovisionedpackage -online 
 $appxpackage = get-appxpackage -allusers
@@ -1824,7 +2207,7 @@ $store = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore'
 $users = @('S-1-5-18'); if (test-path $store) { $users += $((Get-ChildItem $store -ea 0 | Where-Object { $_ -like '*S-1-5-21*' }).PSChildName) }
 
 #use eol trick to uninstall some locked packages
-foreach ($choice in $aipackages) {
+foreach ($choice in $aipackagesarray) {
     foreach ($appx in $($provisioned | Where-Object { $_.PackageName -like "*$choice*" })) {
 
         $PackageName = $appx.PackageName 
@@ -1866,58 +2249,28 @@ foreach ($choice in $aipackages) {
         }
         catch {
             #user has set powershell execution policy via group policy or via settings, to change it we need to update the registry 
-            try {
-                $Global:ogExecutionPolicy = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell' -Name 'ExecutionPolicy' -ErrorAction Stop
-                Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'EnableScripts' /t REG_DWORD /d '1' /f >$null
-                Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d 'Unrestricted' /f >$null
-                $Global:executionPolicyUser = $false
-                $Global:executionPolicyMachine = $false
-                $Global:executionPolicyWow64 = $false
-                $Global:executionPolicyUserPol = $false
-            }
-            catch {
-                try {
-                    $Global:ogExecutionPolicy = Get-ItemPropertyValue -Path 'HKCU:\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' -Name 'ExecutionPolicy' -ErrorAction Stop
-                    Reg.exe add 'HKCU\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d 'Unrestricted' /f >$null
-                    $Global:executionPolicyUser = $true
-                    $Global:executionPolicyMachine = $false
-                    $Global:executionPolicyWow64 = $false
-                    $Global:executionPolicyUserPol = $false
-                }
-                catch {
-                    try {
-                        $Global:ogExecutionPolicy = Get-ItemPropertyValue -Path 'HKLM:\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' -Name 'ExecutionPolicy' -ErrorAction Stop
-                        Reg.exe add 'HKLM\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d 'Unrestricted' /f >$null
-                        $Global:executionPolicyUser = $false
-                        $Global:executionPolicyMachine = $true
-                        $Global:executionPolicyWow64 = $false
-                        $Global:executionPolicyUserPol = $false
-                    }
-                    catch {
-                        try {
-                            $Global:ogExecutionPolicy = Get-ItemPropertyValue -Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' -Name 'ExecutionPolicy' -ErrorAction Stop
-                            Reg.exe add 'HKLM\SOFTWARE\Wow6432Node\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d 'Unrestricted' /f >$null
-                            $Global:executionPolicyUser = $false
-                            $Global:executionPolicyMachine = $false
-                            $Global:executionPolicyWow64 = $true
-                            $Global:executionPolicyUserPol = $false
+            $policyPaths = @(
+                'HKLM:\SOFTWARE\Policies\Microsoft\Windows\PowerShell',
+                'HKCU:\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell',
+                'HKLM:\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell',
+                'HKLM:\SOFTWARE\Wow6432Node\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell',
+                'HKCU:\SOFTWARE\Policies\Microsoft\Windows\PowerShell'
+            )
+            
+            foreach ($path in $policyPaths) {
+                $val = try { Get-ItemPropertyValue $path -Name 'ExecutionPolicy' -ErrorAction SilentlyContinue }catch {}
 
-                        }
-                        catch {
-                            $Global:ogExecutionPolicy = Get-ItemPropertyValue -Path 'HKCU:\SOFTWARE\Policies\Microsoft\Windows\PowerShell' -Name 'ExecutionPolicy' 
-                            Reg.exe add 'HKCU\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'EnableScripts' /t REG_DWORD /d '1' /f >$null
-                            Reg.exe add 'HKCU\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d 'Unrestricted' /f >$null
-                            $Global:executionPolicyUser = $false
-                            $Global:executionPolicyMachine = $false
-                            $Global:executionPolicyWow64 = $false
-                            $Global:executionPolicyUserPol = $true
-                        }
-                        
-
+                if ($val) { 
+                    $Global:ogExecutionPolicyPath = $path
+                    $Global:ogExecutionPolicy = $val
+                    #need to apply enabledscripts 1 for policies
+                    if ($path -like '*Policies\Microsoft\Windows\PowerShell') {
+                        #change path for reg format
+                        Reg.exe add $($path -replace ':', '') /v 'EnableScripts' /t REG_DWORD /d '1' /f >$null
                     }
-                    
+                    Reg.exe add $($path -replace ':', '') /v 'ExecutionPolicy' /t REG_SZ /d 'Unrestricted' /f >$null
+                    break
                 }
-               
             }
             
            
@@ -1925,7 +2278,10 @@ foreach ($choice in $aipackages) {
 
 
         Write-Status -msg 'Removing AI Appx Packages...'
-        $command = "&`"$($tempDir)aiPackageRemoval.ps1`""
+        #prevent packages array from getting expanded too early
+        #pass comma seperated string and then convert back to array in new session
+        $joined = $aipackages -join ','
+        $command = "&`"$($tempDir)aiPackageRemoval.ps1`" -aipackages '$joined'"
         Run-Trusted -command $command -psversion $psversion
 
         #check packages removal
@@ -1933,7 +2289,7 @@ foreach ($choice in $aipackages) {
         $attempts = 0
         do {
             Start-Sleep 1
-            $packages = get-appxpackage -AllUsers | Where-Object { $aipackages -contains $_.Name }
+            $packages = get-appxpackage -AllUsers | Where-Object { $packageName = $_.Name; $aipackages | Where-Object { $packageName -like $_ } }
             if ($packages) {
                 $attempts++
                 if ($EnableLogging) {
@@ -1941,7 +2297,7 @@ foreach ($choice in $aipackages) {
                     $Global:logInfo.Result = "Found Packages: $packages"
                     Add-LogInfo -logPath $logPath -info $Global:logInfo
                 }
-                $command = "&`"$($tempDir)aiPackageRemoval.ps1`""
+                #$command = "&`"$($tempDir)aiPackageRemoval.ps1`""
                 Run-Trusted -command $command -psversion $psversion
             }
     
@@ -1980,13 +2336,24 @@ foreach ($choice in $aipackages) {
         Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages' /v 'Enabled' /t REG_DWORD /d '1' /f *>$null
         Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Microsoft.Copilot_8wekyb3d8bbwe' /v 'RemovePackage' /t REG_DWORD /d '1' /f *>$null
         Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Microsoft.MicrosoftOfficeHub_8wekyb3d8bbwe' /v 'RemovePackage' /t REG_DWORD /d '1' /f *>$null
+        Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages\Clipchamp.Clipchamp_yxz26nhyzhsrt' /v 'RemovePackage' /t REG_DWORD /d '1' /f *>$null
+        Set-ItemProperty 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\Appx\RemoveDefaultMicrosoftStorePackages' -Name 'DynamicRemovalList' -Value @(
+            'aimgr_8wekyb3d8bbwe'
+            'Microsoft.Edge.GameAssist_8wekyb3d8bbwe'
+        ) -type 7 #multi-line string
 
-        ## undo eol unblock trick to prevent latest cumulative update (LCU) failing 
-        #  $eolPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Appx\AppxAllUserStore\EndOfLife'
-        #  $eolKeys = (Get-ChildItem $eolPath).Name
-        #  foreach ($path in $eolKeys) {
-        #      Remove-Item "registry::$path" -Recurse -Force -ErrorAction SilentlyContinue
-        #  }
+        $uninstallRegPath = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Microsoft Copilot'
+        if (Test-Path $uninstallRegPath) {
+            Write-Status -msg 'Removing Copilot Edge Integration App...'
+            $uninstallString = Get-ItemPropertyValue $uninstallRegPath -Name 'UninstallString'
+            if ($uninstallString) {
+                Start-Process cmd.exe -args "/c $uninstallString" -WindowStyle Hidden -Wait
+            }
+            else {
+                Write-Status -msg 'Unable to Find Copilot Uninstall String!' -errorOutput
+            }
+        }
+        
     }
 
 }
@@ -2115,13 +2482,6 @@ function Remove-AI-Files {
             Write-Status -msg 'Unable to Find Backup Files!' -errorOutput 
         }
        
-        <#
-        if (Test-Path "$env:USERPROFILE\RemoveWindowsAI\Backup\CompStorage"){
-            Get-ChildItem "$env:USERPROFILE\RemoveWindowsAI\Backup\CompStorage" -Filter "*.reg"
-        }else{
-            Write-Status -msg 'Unable to Find Component Storage Backup!' -errorOutput 
-        }
-        #>
     }
     else {
 
@@ -2137,6 +2497,7 @@ function Remove-AI-Files {
             'Microsoft.Office.ActionsServer'
             'aimgr'
             'Microsoft.WritingAssistant'
+            'Microsoft.AIFabric.CBS'
             #ai component packages installed on copilot+ pcs
             'WindowsWorkload'
             'Voiess'
@@ -2296,6 +2657,10 @@ function Remove-AI-Files {
             "$env:SystemRoot\SysWOW64\Windows.AI.MachineLearning.Preview.dll"
             "$env:SystemRoot\System32\SettingsHandlers_Copilot.dll"
             "$env:SystemRoot\System32\SettingsHandlers_A9.dll"
+            "$env:SystemRoot\System32\Windows.AI.Agents.dll"
+            "$env:SystemRoot\SysWOW64\Windows.AI.Agents.dll"
+            "$env:SystemRoot\System32\Windows.Internal.AI.PlatformCapability.dll"
+            "$env:SystemRoot\SysWOW64\Windows.Internal.AI.PlatformCapability.dll"
         )
         foreach ($path in $paths) {
             if (Test-Path $path) {
@@ -2359,7 +2724,7 @@ function Remove-AI-Files {
         Reg.exe delete 'HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate' /v 'CopilotUpdatePath' /f *>$null
     
         #remove additional installers
-        $inboxapps = 'C:\Windows\InboxApps'
+        $inboxapps = "$env:windir\InboxApps"
         $installers = Get-ChildItem -Path $inboxapps -Filter '*Copilot*'
         foreach ($installer in $installers) {
             takeown /f $installer.FullName *>$null
@@ -2562,8 +2927,8 @@ function Remove-AI-Files {
             'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\SideBySide\Winners'
         )
         $dirs = @(
-            'C:\Windows\WinSxS',
-            'C:\Windows\System32\CatRoot'
+            "$env:windir\WinSxS",
+            "$env:windir\System32\CatRoot"
         )
         
         New-Item "$($tempDir)PathsToDelete.txt" -ItemType File -Force | Out-Null
@@ -2612,47 +2977,6 @@ function Remove-AI-Files {
         Start-Sleep 1
     }
 
-    #TEST:
-    # remove ai components from component storage
-    # this will prevent sfc from trying to repair files removed 
-    # but seems to prevent windows update from working
-    <#
-    $compPath = "$env:systemroot\System32\config\COMPONENTS"
-
-    reg.exe query 'HKLM\COMPONENTS' /ve *>$null
-    if ($LASTEXITCODE -ne 0) {
-        reg.exe load 'HKLM\COMPONENTS' $compPath >$null
-    }
-
-    if ($LASTEXITCODE -ne 0) {
-        Write-Status -msg "Unable to Load $compPath" -errorOutput
-    }
-    else {
-        $paths = Get-ChildItem 'registry::HKLM\COMPONENTS\DerivedData\Components' | Where-Object { $_.PSChildName -like '*copilot*' -or
-            $_.PSChildName -like '*userexperience-aix*' -or
-            $_.PSChildName -like '*userexperience-recall*' -or
-            $_.PSChildName -like '*userexperience-coreai*' } 
-
-        if ($paths) {
-            Write-Status -msg 'Removing AI Components Found in Component Storage...'
-            #backup by default for now
-            $backupPath = "$env:USERPROFILE\RemoveWindowsAI\Backup\CompStorage"
-            if (!(Test-Path $backupPath)) {
-                New-Item $backupPath -ItemType Directory | Out-Null
-            }
-
-            foreach ($path in $paths) {
-                reg.exe export $path.Name "$backupPath\$($path.PSChildName).reg" /y >$null
-                reg.exe delete $path.Name /f
-            }
-            
-        }
-        else {
-            Write-Status -msg 'No Ai Components Found in Component Storage'
-        }
-
-    }
-    #>
 }
 
 
@@ -2702,21 +3026,8 @@ function Disable-Notepad-Rewrite {
     #disable rewrite for notepad
     Write-Status -msg "$(@('Disabling','Enabling')[$revert]) Rewrite Ai Feature for Notepad..."
     <#
-    taskkill /im notepad.exe /f *>$null
     #load notepad settings
     reg load HKU\TEMP "$env:LOCALAPPDATA\Packages\Microsoft.WindowsNotepad_8wekyb3d8bbwe\Settings\settings.dat" >$null
-    #add disable rewrite
-    $regContent = @'
-Windows Registry Editor Version 5.00
-
-[HKEY_USERS\TEMP\LocalState]
-"RewriteEnabled"=hex(5f5e10b):00,e0,d1,c5,7f,ee,83,db,01
-'@
-    New-Item "$env:TEMP\DisableRewrite.reg" -Value $regContent -Force | Out-Null
-    regedit.exe /s "$env:TEMP\DisableRewrite.reg"
-    Start-Sleep 1
-    reg unload HKU\TEMP >$null
-    Remove-Item "$env:TEMP\DisableRewrite.reg" -Force -ErrorAction SilentlyContinue
     #>
     #above is old method before this policy to disable ai in notepad, [DEPRECIATED]
     Reg.exe add 'HKLM\SOFTWARE\Policies\WindowsNotepad' /v 'DisableAIFeatures' /t REG_DWORD /d @('1', '0')[$revert] /f *>$null
@@ -2724,10 +3035,10 @@ Windows Registry Editor Version 5.00
 
 
 
-function Remove-Recall-Tasks {
+function Remove-WindowsAI-Tasks {
     if (!$revert) {
         #remove recall tasks
-        Write-Status -msg 'Removing Recall Scheduled Tasks...'
+        Write-Status -msg 'Removing Windows AI Scheduled Tasks...'
         #believe it or not to disable and remove these you need system priv
         #create another sub script for removal
         $code = @"
@@ -2764,7 +3075,11 @@ Get-ScheduledTask -TaskName "*Office Actions Server*" -ErrorAction SilentlyConti
         "
         
         Run-Trusted -command $command -psversion $psversion
-        
+        #disable windows ai event viewer logs
+        wevtutil sl Microsoft-Windows-AI-ModelContextProtocol/Admin /e:false *>$null
+        wevtutil sl Microsoft-Windows-AI-Platform/Admin /e:false *>$null
+        wevtutil sl Microsoft-Windows-AI-ModelContextProtocol/Operational /e:false *>$null
+        wevtutil sl Microsoft-Windows-AI-Platform/Operational /e:false *>$null
     }
     
 }
@@ -2775,6 +3090,52 @@ function Update-Cleanup-Check {
 
 write-host "Skipping the creation of AI-Removing tasks"
     
+}
+function Create-ScriptShortcut {
+    param(
+        [switch]$Desktop,
+        [switch]$Start
+    )
+
+    #get powershell 5.1 binary path
+    $psPath = "$env:SystemRoot\system32\WindowsPowerShell\v1.0\powershell.exe"
+    #removeai icon in base64
+    $removeAiIconBase64 = 'AAABAAEAgIAAAAEAIAAoCAEAFgAAACgAAACAAAAAAAEAAAEAIAAAAAAAAAABACUWAAAlFgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA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//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//zgnyv/Chkf/6qIi/+ihJf/ooyb/6aQl/+mlJv/ppif/6qco/+upKf/rqir/7Ksr/+2rK//trCz/7q4u/+6vL//vsDD/8LEx/++xMf/vsjL/8LMz//G0NP/xtTX/8bc2//K4N//yujf/87s4//S8Of/1vTr/9r47//e/PP/3vzz/9cE9//jBQP/7wkH/+sNA+vTFRvHuxVbm8sZbrv7LUXDNr4dWDg35mAAA//kAAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP/oAAD/WgAA/wEAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/wAAAP8AAAD/AAAA/xwAAP+vAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//0ozuP/RkDr/6aIj/+iiJf/ooyT/6KQl/+ilJv/qpyj/66gp/+uqKv/rqir/7Ksr/+2sLP/urS3/7a4u/+6vL//vsDD/77Ex/++xMf/vsjL/8LMz//G0NP/xtjX/8bc2//K5N//yujf/87s4//S8Of/1vTr/9r47//e/O//6wTj/+cE9//jBQv/3wkH/+MU+//vFP//7xUL/7sJM/HplqPUGBvv8AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD/8QAA/28AAP8FAAD/AAAA/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/wAAAP8AAAD/AAAA/yoAAP/BAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AwL8/2FDpP/ZljL/6aIj/+ijJP/opCX/6KUm/+mmJ//qpyj/66kp/+uqKv/sqyv/7Ksr/+2sLP/urS3/7q4u/++vL//vsDD/77Ex/++yMv/wszP/8bQ0//G1Nf/xtzb/8rg2//K5N//zuzj/9Lw5//W9Ov/2vjv/9r47//e+PP/3vz//98FB//XDP//1xD7/9MVB//LERf+afoj/ExDw/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//oAAP+IAAD/CgAA/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVFzjAIFssgBjX+AAcEiMADEo4koUDu7pAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//CAb3/3VQkf/hnCv/6KMi/+ijJP/ppSb/6KUm/+mmJ//rqCn/66kq/+yrK//sqyv/7aws/+6tLf/uri7/768v/++wMP/wsTH/77Iy/++yMv/wszP/8LQ0//C2Nf/xtzX/8rg2//O6N//zuzj/9Lw5//W9Ov/1vjv/8sA7//PAPf/4wD//+sE///rDPv/4xT7/r412/yAa5v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA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//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//OCbL/8OIR//qpCL/6aQl/+qlJv/qpif/6qco/+uoKf/rqir/7Ksr/+2sLP/trCz/7q0t/++uLv/vry//77Aw//CxMf/wsjL/8LMz//G0NP/xtTX/8bc2//K4N//zuTj/87o4//S8Of/1vTr/9785/+u2Rf9uVaj/BQT7/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xYT7/+kiIv/9tFR/fbSVtL102dt9NeFEOvESAD26asA9OKYAP3nowD//94AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6c+WAAAAAADUghQA15k+JtKGHsXXgAv/24II/9mDC//ahAz/24UN/9yGDv/eiAz/xHko/0cssv8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//SzW4/8+RO//qpSL/6aQl/+mlJv/ppif/6qco/+upKf/sqiv/7Ksr/+2sLP/urS3/764u/+6vL//vsDD/8LEx//CxMf/vsjL/8LMz//G0NP/wtjX/8bc2//K4N//zujf/87s4//W9OP/wuT7/h2iU/wsI9/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8LCff/jXSc//rPTf/91En/+9NM//vRUPD50lyQ89l3HfOfAAD15K0A9d+iAPnvzgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/zugDrxoAA3qhbAOC1eAvQiCaV1X8M/teACP/ZgQj/2IIK/9mDC//ahAz/3IYO/9yGDv/eiAz/uXI1/zQgx/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8DAvz/X0Ol/9mYMf/qpSP/6aUm/+ilJv/qpyj/66gp/+uqKv/sqyv/7Ksr/+2sLP/urS3/764u/+6vL//vsDD/8LEx//CyMv/wsjL/8LMz//G1NP/wtjX/8bc2//K4N//zujf/8rs6/5x4gf8VEO7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//BgX7/3Rgrf/zyFT//9JM//7STP/+0Uz//9FO//3STfn11Fmy8Nd8K/LGAADy5MYA8+i+AP/fjwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtGIkAPzhlwCRDgAA0ZI6UdSAD+zUfgj/1X8J/9aACf/Yggn/2YML/9qEDP/bhQ3/3IYO/9yGDv/diQ3/p2hI/yMW2f8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8HBfj/dlOO/+OfKv/ppST/6KUm/+mmJ//qpyj/6qkp/+uqKv/sqyv/7Ksr/+2sLP/urS3/7q8v/++wMP/vsDD/8LEx/++yMv/wszP/8bQ0//C2Nf/xtzb/8rg2//W7Nv+yiW3/IBnl/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//9aS8D/6sFb///US//90k7//NJN//7TTP/90k7//tNK//zSTv7201+1+d93I/fTUgD///8A///LAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPLhzADjr28A3KNSAOCxaxLThh+y1XwH/9d+Bv/Xfwj/14EI/9iCCP/Ygwr/2YML/9qEDP/bhQ3/3IYO/9yIDv/biA//k1tf/xYO5/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8SDO7/kGV3/+aiJv/opSX/6aYn/+qnKP/qqCn/66oq/+yrK//sqyv/7Ksr/+6tLf/uri7/7q8v/++wMP/vsTH/77Ex/++yMv/wszP/8bU0//C2Nf/0uTT/x5db/zUp0/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//PzTS/9mzZv//1Ur//9NM//3TS//91En/+tVK//vUTP//00v//tJM//3TTfz31FyT79qND+7SbgDgsh0A//CxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA68mgAP//xwCyVAAA1pY9TNF9D+3UewX/1XwG/9l+Bf/XgAf/2III/9iCCf/Yggr/2oQM/9uFDf/bhQ3/24cO/9yIDf/ZhxL/fk52/wsH8/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8dFOT/pHRk/+ikJP/opSb/6aYn/+qnKP/qqSn/66oq/+yrK//sqyv/7aws/+6tLf/tri7/7q8v/++wMP/usTH/77Iy//CzM//wtDT/8rcz/9OgTv9IN8P/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//y4m3v/Go3L//9NK///SS///00z//9FN//7SS//81Ur//dNO///STf/+00r//dNM//nRVPHw1mpj9v/xAvTqlwD/9KEA9eyzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+6MgA6KZRAP/21ALZhx+O1XoH/9V7Bf/WfAb/2H0G/9h/Bv/XgAj/2IEJ/9iCCv/agwv/2oQM/9uFDf/bhg3/24cO/9yJDf/Tgxn/aUKO/wYE+P8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8rHtb/t4FS/+mmJP/opSb/6aYn/+qoKf/rqSv/7Kos/+yrKv/trCr/7a0s/++tLv/vri//8LEt/++xL//wsTH/8LIy//K1Mv/gqEL/XEax/wEB/v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8eGOr/tJJ////RSf//0kr//9JL///TTP//0k3//9JN///TTP//003//9JM///SS//+0kz/+9NM//nTVcf31ngm9ctfAP//2gDw6rEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALyCRADJj0YAyJtgFc5+GL/WeQP/13oD/9V7Bf/WfQX/134G/9Z/CP/XgAj/2IEJ/9mCCv/Zgwv/24UN/9uFDf/bhg7/24cO/92KDv/MgCH/Vzah/wIB/f8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//88K8b/xYtG/+qmJP/ppif/6qco/+uoKf/qqiv/66sr/+2qLv/sqy7/66wu/+utMP/srjH/768x//CxMf/xszH/56w7/3RXnf8HBfr/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//Eg7y/5t9kf/9zUv//9BK//7RSv//0kv//9JL///TTP//00z//9NM///TTP//0kv//9JL///SS//+00r//NFR9/bSY3fv8bcD9OCHAPbyvQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA////ALp2HADMlUg5ynoR59R4A//XewH/1nsD/9Z8Bf/VfQb/1n4H/9eACP/YgQn/2IIK/9mDC//ahAz/24UN/9uFDf/chg7/24gP/96KDf/Deiv/QCi6/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//9QOLT/1JU6/+ymJv/rpif/7Kgn/+mqJ//pqyn/76ku/++qLf/srC3/7a4s//CuLv/wrzD/8LEw/+yvNP+LZ4j/Dgvz/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//woI+P+DaqD/9cdO///OSf/+z0r//tBK//7RSv//0kv//9NM///TTP//00z//9NM///SS///0kv//9JL///SS//80U//+dRRxvHaeiLvzVUA////APrvtwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD9v2oAyHMFAOCWNWDSewr40ngD/9Z6Af/WewL/1nwE/9R8B//XfQb/138H/9eACP/YgQn/2YIK/9mDC//ahAz/24UN/9yGDv/chw7/3IgO/96KDf+0cD3/MB7M/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wQD/P9oSZ//3pwy/+ynJv/rpyb/7Kkn/+qnLP/tqSj/7qoo/+qrK//urSv/76wv/++vMP/vsC//ondz/xgS6/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8DAv3/alWx/+7AUf/+zUf//c1J//7OSv/+z0r//tBK///RS///0kv//9NM///TTP//0kv//9JL///SS///00v//9JL//7STP/800/1+ddgZO+zFAD943kA1oEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOmWKQDSdgEA4IkYeNZ7Bf/SeAP/1XkC/9V6Av/WewP/1HsG/9Z8Bf/Xfgf/138H/9eACP/YgQn/2YML/9qDC//ahAz/3IYO/9yHDv/ciA7/3IkO/96LD/+lZ03/IhXa/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//woH9f98V4z/46Et/+mnJ//qqCv/6LVW/+7MgP/vzIP/4rhX/+qsMP/urC//7q8u/7SFYf8nHN3/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//1BAw//htVn//cxF//zMSP/9zUn//c1J//7OSv//z0v//9BL///RS///0kv//9JL///SS///0kv//9JL///SS//+0kz//tJN//3SS//81VSc9+CVCPnadQD24Z0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA030JANd4AQDUewZ+1nkB/9R4Av/SeAP/1HkC/9d6A//VegX/1nwF/9d9Bv/Wfwf/14AI/9iBCf/Zggr/2YML/9qEDP/bhQ3/3IYN/9yHDf/diA7/3YkP/92KEP+TXGH/FA3p/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xIN7/+PZnr/5KMr/+i8Yv/y68r/9Pfy//b19P/z687/6sBm/+uvK//CkFH/NijQ/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8+MdH/0adi//zKQ//6ykb/+8tH//zMSP/9zUn//s5K//7OSv//z0v//9FL///SS///00z//9NM///SS///0kv//9JL//3TTP/90k7//9NK//rRWMv014Ui881qAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADKdwcA1ngCAM93BX7VeAL/1XgC/9F3BP/UeAL/13kC/9Z6A//VewT/1nwF/9Z+Bv/Wfwf/14AI/9iBCf/Zggr/2YML/9uFDf/bhg3/3IcN/9yIDv/diQ//3YoP/9qJFP9+UHj/DQjx/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xwU5P+kenD/996t//f4+P/49/X/9ff2//H2+//24a3/z51P/0g1vf8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//KyLe/8KabP/7yEL/+chE//rJRf/6ykb/+8tH//zMSP/+zkr//s5K///PS///0Ev//9JL///SS///00z//9JL///SS///0kv//NNL//7STf/+0U3/+9FU7vjZc0X1zFcA//+8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN6EFgDSeAMA2n8PftF6BP/TeQH/0XkB/9Z3A//XeAL/1HoD/9Z7BP/WfAX/130G/9h+B//Yfwj/2IEJ/9iCCv/Zgwv/2oQM/9uFDf/bhg3/24cO/9uID//ciRD/3osP/9WGGv9rQ4z/BgT4/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//ysl5f/Bven/+fj3//n29f/19/T/8/f7/+Xe3/9cTcT/AgH7/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xwW6v+rh3z/+cVB//rGQv/6x0P/+shF//rKRv/8y0f//MxI//3NSf/9zUn//s5K///QSv//0Ur//9JL///TTP//00z//9JL///SS//+00z//tJN//7RTv/+0lD3/ttbX/zQTgD/6WsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7qUzAM11AADfkB5203wG/9N4Af/SeQH/1XcD/9Z4Av/VeQP/1noD/9Z7BP/WfAX/130G/9d+B//XgAj/2IEJ/9mCCv/Zgwv/2oQM/9uFDf/bhg7/2ocO/9uID//ciRD/34sP/8+CIf9WN6P/AQH+/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//z4//f/R0fj/+vj3//b49f/s7vX/eHf6/wgI/v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8SDvH/lnWM//XBQ//5xUH/+cVC//rGQ//6x0T/+slF//vKRv/8y0f//MxI//3NSf/+zkr//89J///QSf//0Ur//9JL///TTP//00z//9JL///TTP//0kz//tJN//7ST/r91lFn/tFOAPzaVQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD82WEAyncCAOKoMmbWfgn51ncA/9R4Af/TeAP/03gC/9V5Av/WegP/1nsE/9V7BP/WfAX/134G/9d/CP/XgAj/2IEJ/9mCCv/Zgwv/2oQM/9uGDf/ahw7/24gP/9yJEP/dihD/34wP/8N8Lv9DKrj/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//1RT/f/g3/j/9PX3/5GR9v8ODv//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//CAb5/4Bkm//xvUT/+cM///jDQf/5xUL/+cVC//nHQ//5yET/+slF//vKRv/8y0f//MxI//7OSv/+zkn//9BJ//7RSv/+0Ur//9JL///SS///00z//9NL///TS//+00z//tJN+vvSTGn+004A99JLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/2fADWkRoA6MFJXdmIEvbVdwH/1ngB/9J4A//ReQH/1XgB/9V5Av/WegP/1XsE/9Z8Bf/XfQb/134H/9eACP/YgQn/2YIK/9mDC//ahAz/24UN/9uGDv/bhw7/24gP/9yJD//dihD/340P/7Z0PP8yIMr/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//BAT//2tr/P+Zm/v/Gxv9/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wMC/f9lT6//6LVJ//nDPf/4wj//+MNA//jEQf/5xUL/+cZD//nHRP/6yUX/+8pG//zLR//8zEj//c1J//7OSv/+z0r//tBK//7RSv//0kv//9NM///TTP//00v//9NL//7TS//+00z6+9NLaf/TTAD300sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA7u1yAPHDSQDz22Fa3Z8m9tJ3AP/WeAH/03gD/9F5Af/VeAH/1XkC/9Z6A//WewT/1XsE/9Z8Bf/XfQb/138H/9eACP/YgQn/2YIK/9mDC//ahAz/24UN/9yGDv/chw7/3IkP/92KEP/dixD/340Q/6RpT/8dE+D/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//CAj//xER//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//TDvD/9uqUf/4wTv/98E+//jCP//4w0D/+MNA//jEQf/5xUL/+sZD//nIRP/6yUX/+8pG//zLR//8zEj//s5K//7OSv/90Ev//tFL///SS///0kv//9JL///TS///0kv//tNK///SS/v900xq/9JLAPrVTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADn6m4A/uBlAPfpblrpv0T20n4G/9V4Af/WdwP/03gB/9V4Af/UeAH/1XkC/9V6A//VegP/1XsE/9d9Bv/Wfgb/1n8H/9iBCf/Yggr/2YML/9qEDP/bhQ3/3IYO/9yGDv/biA7/3IkP/92KEP/djBD/24wT/4xZaf8TDOv/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//zMo1v/Jm17/+MA5//W/PP/2wD3/+MI///jCP//3w0D/+MRB//nFQv/5xkL/+cdD//rJRf/7ykb/+8pG//zMSP/9zUn//c5K//3PSv/90Ev//tFK///SS///0kv//9JM//7TTf/+00z//9NM+/3TTGr/0ksA/NRMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOTocAD96GwA9OpwWfbbXvXdkhn/03cA/9d3A//TeAH/1XgB/9V4Af/VeAH/1XkC/9N6A//UewT/13wF/9Z9Bv/Wfgf/14AI/9iBCf/Yggr/2YML/9qEDP/bhQ3/24YO/9uHDv/biA//3IkP/92KEP/ejBD/2YoX/3lNff8KBvX/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8kG+L/tItt//a+Of/2vjv/9b47//bAPf/3wT7/98I///fDQP/4xEH/+cRB//nFQv/5xkP/+chE//rJRf/7ykb/+8tH//zMSP/9zUn//c9K//3QS//+0Ev//tFL///SS///0kz//tNN//7UTP//00z7/dNMav/SSwD71EwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5+puAPbnbQDw6W5Z+OZs9eq3P//QfAb/03cD/9N5Av/VeQH/1XgA/9Z3Af/UeAL/0nkD/9N7A//XewT/13wF/9d9Bv/Yfgf/14AI/9iCCv/Zgwv/2oQM/9uFDf/bhQ3/24YO/9uHD//ciRD/3YoQ/96LEf/fjBD/04cd/2M/lv8EA/v/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//FxHs/6B6fP/zuzn/9b05//a+O//1vjv/9b88//bAPf/3wT7/+MI///nDQP/5xEH/+MRB//nFQv/6xkP/+chE//rJRf/7ykb//MxI//3NSf/+zkr//s9L//7PS//+0Uv//9JN///STP/+003//tNM///TS/v900tq/9NMAPrTSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD26G8A++ZuAPnnb1v65272+Nxh/9yZIf/RdwP/1HkC/9N5Af/QegD/03gB/9Z4Af/WeAP/1XoD/9R7BP/VfAT/13wF/9d+B//XgAj/2IEJ/9mCCv/agwv/2oQM/9uFDf/chg7/24cO/9uID//ciQ//3YoQ/96LEf/gjRD/y4In/1E0qf8BAf7/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wwJ9f+JaI7/8Lc6//S8OP/0vDn/9b06//a+O//2vjv/9sA9//fBPv/3wT7/+cI///jDQP/4xEH/+cVC//rGQ//5x0T/+slF//vKRv/7y0f//MxI//3NSf/+zkr//s9K//3QS//+0Uz//9JM//3STP/+00z//9JL+/3TS2r/00wA+tNLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP7ocgD75m4A/OdwW/jnbvb66G3/8MtQ/9SGEP/TdwD/1HgB/9F5AP/SeQH/1XgB/9h3Av/YeAP/03oE/9R7BP/WfAX/130G/9d/B//XgAj/2IEJ/9mCCv/Zgwv/2oQM/9uFDf/chg7/24cO/9yID//ciQ//3YoQ/96MEf/gjhD/wXsy/z4ovf8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8GBfr/cVWg/+ewP//zuTX/87o3//O7OP/1vTr/9b06//a+O//2vzz/9sA9//fBPv/4wj//+MNA//fDQP/4xEH/+cVC//nGQ//5yET/+slF//vKRv/8y0f//MxI//3NSf/+zkr//c9L//7RTP/+0kv//dJM//7TS///00v7/dNLav/TTAD600sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9OtyAProcAD36XFZ+uhv9fjobv/35mn/6rpB/9F/CP/WdwH/13gB/9N4Af/TdwH/1XcB/9d3Av/VeQT/1XoE/9Z8Bf/XfQb/134H/9eACP/YgQn/2YIK/9mDC//ahAz/24UN/9yGDv/chg7/3IgO/9yJD//dihD/3osR/96MEv/gjxD/snJC/ysc0f8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AgH+/1xEsv/ep0T/87g0//K4N//zuTf/87s4//S8Of/1vTr/9b06//a+O//2vzz/9sA9//fBPv/4wj//+MNA//jEQf/4xEH/+cVC//nHQ//6yUX/+8pG//vLR//8zEj//c1J//7OSv/9z0r//dBL//7RS//90kz//tNL///TTPv900tq/9NMAPrTSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD66nIA++hwAPrpcVr66HD2+Ohv//fobf/54Wf/5bE4/9N+CP/TdwL/1HgC/9R4Av/SeAH/03gB/9d4A//WegT/1XsE/9Z8Bf/XfQb/134H/9eACP/YgQn/2IIK/9mDC//ahAz/24UN/9yGDv/dhw7/3YgO/9yJD//dihD/3osR/96NEv/fjxL/omhU/yAU3v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//9EM8X/055M//O2Mv/xtjX/8bc2//K4N//zuTf/9Ls4//S8Of/1vTr/9r47//e/PP/3vzz/98E+//jCP//4w0D/+MNA//jEQf/5xUL/+cZD//nIRP/6yUX/+8pG//zLR//8zEj//c1J//7OSv/+z0r//tBK//3RTP/900v//9NL+/3T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//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//DA3//4eI+//y7/X/9/Lp//Ls1P/24K3/5btm/+eoLf/uryv/8bQy//G1Of/2tzj/8rk4//O6Of/0uzr/9bw6//W+O//1vjv/9L88//TAPf/0wj7/9MM///XEQP/3xEH/+cVC//jGQv/4x0P/+chE//rJRf/7ykb/+8tH//3NSf/9zUn//s1K//7PSv/+0Ev7/NJLav7RSgD71EsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA++11APrsdAD77XVY+u1z9frscv/66nD/+uhv//fobf/45mz/9uVr//bjaf/24mf/+eFm//neZP/z1Fr/7sJJ/+evN//dmyT/3IsV/9iBC//UfQf/0X0G/9N/Bv/Yfwf/24AI/9uCCf/ahAr/1oYL/9aHDP/dhg3/2YkH/9ibPv/05Mv/9vf5//b3+f/y9/b/9Pb1//n49v/X1ff/Q0P9/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wYG//90c/v/7ezz//j68f/1+PX/8vX7//P2+v/y4sz/2qFB/92REv/jlxv/558l/++oK//wsDL/9LY3//e6Ov/3vDv/9r07//a+O//2vzz/9r88//fBPf/3wj//98I///jDQP/6xEH/+cVC//nGQ//5yET/+slF//vKRv/7y0f//MxI//3NSf/9zUr//c9J//7QSvv80kpq/tBKAPrTSwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD87nYA+u10APvtdVj57XT1+uxy//vrcf/66XD/9+hu//nnbf/35mv/9uRq//XiaP/34Gj/999n//beZv/43mT/99ti//HXXP/wzVL/7b9F/+WtNP/gmiT/24wV/9WFDf/Tggn/1YEJ/9mBCf/dgwv/34MM/92FDP/Uhwn/5bd0//n09v/59fn/9vb4//T39f/29vX/9ff1//b59f/Dxvf/LS79/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8CAv//W1r8/+Pj9//39/f/9fb3//b29f/29/T/9vb1//j18//ju3L/14kO/9qHD//XiBD/14oQ/9qOE//glhr/56Ej/+6rLP/0tDT/+Lo5//m+PP/4vz7/+cA+//nBPv/4wj//98NA//jEQP/4xEH/+cVC//nHQ//5yET/+slF//vKRv/7y0f//MxJ//3NSf/9zkn//s9K+/vRSWr+0EkA+dJKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP3vdwD77nUA/O52WPrudPX77XP//Oxx//rpcP/46W7/+udt//zmbP/95Gr/+uNp//bhaP/14Gf/9d5m//bdZP/03GL/8tth//LbYP/02l7/9dZb//XRV//zyE7/6rtB/+OqMf/gmiL/3I4X/9iHEP/XhA3/3IIN/9qECv/ot3D/+PXx//n29v/29fj/9/b1//f29v/39vb/+vn1/8rJ9v8vL/3/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wUF//+Af/r/9PP2//f29//39fj/+fX3//r29f/39vX/9/bz/+m5df/biBH/3IkQ/9qID//ahg7/2YUM/9eEC//VhQr/1IYL/9eMEP/flRn/5qEj/+ysLf/0tjb/+L08//jBP//3w0D/9cRA//bEQf/5xUL/+cZD//nHRP/6yUX/+8pG//vLR//8zEj//MxJ//3OSf/+z0n7+tBJav3PSQD40UkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/e93APzvdgD973dY++919fvtc//87HL/++px//nqb//76G7/+uds//rla//55Gr/+uJp//fhZ//y4Gb/899l//bdY//122L/9dph//XYX//01l7/9NVd//XUXP/z1Fr/8tJX//HNUv/vxEn/6rc+/+SoMP/dnCL/248X/9qfP//y5cX/+Pf2//T2+f/29vf/9Pb3//b4+P/Y2Pr/SEf9/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xgZ/v+jpfn/9fb3//X29//39vf/+Pf3//f49//y6Mj/3p1E/92IFv/ciRP/2YgS/9mID//Zhw7/14UM/9eEC//Wggn/1n8I/9V+Bv/Ufgb/04EH/9iIDf/ekxb/5qEj/++wMP/3vDv/+MNA//jFQf/5xUL/+MdD//nIRP/6yUX/+8pG//vLR//8zEn//c5I//3PSfv60Elq/c9IAPjRSQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+8HgA/e93AP3wd1j873b1++50//ztc//763L/+epw//jpb//26G3/9+Zs//jla//342n/+OJo//ngZv/432X/991k//XcYv/02mH/9Nlg//PXX//x1l7/8tRc//LTWv/y0ln/8tFY//LQV//xz1X/8M1T/+/ITv/xvkX/6LQ+/+TFb//05bf/9PDW//bz6P/7+PP/5eX0/19g+/8CAv//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//ycn/f+5uvf/+Pjy//Xz6f/w69L/8dao/9uqWv/YjRr/2Y4R/9WN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bf/55Wv/+ONp//jhZ//34Gb/9t9l//XeZP/03GL/9Nth//TZYP/02F//89Zd//LVXP/y01r/8tJZ//LQWP/xz1f/8M1W/+7MVP/szFH/7MtO/+/LS/+ylnj/JR/j/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//BwX4/2tIkP/VjyH/3pQX/92RGP/djhj/3I0W/9qMFP/ZixL/2okQ/9mID//Yhw7/2YYN/9iFDP/Xgwr/14EJ/9Z/B//Vfgb/1XwF/9R6A//UeQL/1HgB/9Z3Av/UeAL/0XgC/9V3Af/XdwD/1oIJ/+yrLv/7xkX/+MlG//rKRv/7y0f7/MtHbP3MSAD8y0cAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//R7AP70ewD/9HtX/PR59fzyd//88Xb//O91//nuc//77HL/+utx//npcP/5527/+eZt//nlbP/45Gr/+OJo//jhZ//232X/9t5k//XdY//022L/89pg//XYX//0117/89Vc//PUW//y0lr/8tFY//LPV//yzlX/8c1U//DMU//yzE//x6Zu/zUs2P8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//DAjz/4BWev/bkRz/3ZIY/9yQF//cjhb/24wV/9qLE//ZihH/2YkQ/9mHDv/Zhg3/2IUM/9eEC//Xggn/14AI/9Z/B//VfQX/1XsE/9R5Av/UeAH/03gB/9J4Av/TeAH/1ngB/9d3Av/SdwH/1oQL//GxM//7x0X/+8pG//rLRvv8y0ds+8tHAPzLRwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD+9HsA/vV7AP70e1f89Hr1/PN4//3xd//78Hb/+u90//ztc//77HL/+epw//nob//4527/+eZs//jlav/442n/9+Jo//fgZv/232X/9t5k//TcYv/z22H/9dlg//TXXv/z1l3/8tVc//LTWv/y0Vn/8tBY//LPVv/yzlX/885S/9S0Zf9KPsn/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//Fg/o/5RjZv/ckhn/3JEX/9yPFv/cjRb/24wV/9qLEv/ZiRD/2YgP/9iHDv/Zhg3/14QL/9iDCv/YgQn/14AI/9Z+Bv/WfAX/1XoD/9V5Av/TeQH/0nkB/9J5Af/TeAH/1HgC/9N4Av/SdwH/14wQ//W7Ov/9yUb/+ctG+/rLR2z5y0YA+stHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP71fAD+9XwA/vV8Vv31e/T883n//PJ4//zwd//773X//e10//vscv/663H/+elw//nnbv/55m3/+OVs//jkav/34mn/9+Fn//ffZv/23mX/9dxk//TbYv/12mH/9Nhf//PXXv/z1Vz/8tRb//LSWf/x0Vj/8NBW//HQVP/evmH/XVC8/wIC/f8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//Ihfc/6RtVP/dkhf/3JAX/9yOFv/bjBX/24sT/9mKEf/ZiRD/2YgP/9mGDf/YhQz/2IML/9iCCv/WgAj/1n8H/9V9Bf/VewT/1XkC/9V5Af/UeAH/0nkB/9J4Af/TeAH/1HgB/9R4Af/TeQH/45oe//vDQ//6ykb7+MtFbPnLRQD2zEUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//Z9AP72fAD/9n1W/fV79Pz0ev/883j//PF4//vwdv/97XT//O1z//vscv/56nD/+ehv//jnbv/45m3/+OVs//jjav/34Wn/999n//beZv/23WX/9dtj//XaYf/02WD/89de//PWXf/y1Vz/8dNa//HSWf/z0Vf/6chc/3Rkrf8GBfv/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//Lx/O/7V3Qv/fkhb/3I8X/9yNFf/bixT/2ooS/9mJEP/ZiA//2IcO/9mGDf/YhAz/2IIK/9aACP/Wfwf/1X4G/9V8Bf/UegP/1HkC/9R4Af/UeAH/1HgB/9R4Af/UeAH/1HgB/9d3Af/TgAf/7bAy//zIRfv2y0Ns+8lDAPPMRAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/9n0A/vZ9AP/2fVb99nv0/fR7//3zef/98Xn//PF2//3udf/87nT/++1z//rrcf/66XD/+ehv//jnbv/45Wz/9+Rr//fiaf/34Wj/999n//bdZf/13GT/9dti//XaYf/z2F//89de//PWXf/y1Fv/8tNZ/+/OW/+MeZ7/Dgz1/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//Qiy6/8J/NP/fkRb/3I4W/9yMFf/bixP/2YoR/9mJEP/Zhw7/2YYN/9mFDP/Zgwv/14EJ/9eACP/Wfwf/1nwF/9V7BP/VeQL/1HgB/9R4Af/UeAH/1HgB/9R4Af/UeAH/1ngB/9B5Af/clBj/+sJA+/bLRGz+yEMA7s1DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/3fgD/930A//d+Vv72fPT99Xv//fR6//3yev/88Xf//e92//zvdf/77XP/++xy//rqcP/56G//+Odu//jmbf/45Wz/9+Nq//fhaf/34Gf/995m//bdZf/23GP/9dph//TZYP/02F//89Zd//LVW//y01r/ooyQ/xkV7v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8CAf3/VTin/8yFKv/ekBX/3I0W/9uMFP/aixL/2YkQ/9mID//Yhw7/2IYN/9iEDP/Ygwr/14EJ/9aACP/WfQb/1nwF/9V6A//VeQL/1HgB/9R4Af/UeAH/1HgB/9R4Af/UeAH/03cB/9SAB//zsjP7+MtFbP/EQgDvzUQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//mAAP/3fgD/+H9V//d99P72fP/99Xr//fN6//zyeP/98Hf//O91//vudP/67HL/+utx//npcP/46G7/+OZt//jlbP/35Gv/9+Jp//fhaP/332f/9t5l//XdY//122L/9Nph//TYX//0117/9Ndb/7iigv8lIOb/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AQH//wgI//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8FA/r/akWQ/9WLH//djxX/240U/9qMEv/ZihH/2YkQ/9iHDv/Yhg3/2IUM/9iDC//XgQn/14AI/9Z+B//VfQX/1XsE/9V5Av/UeAH/1HgB/9R4Af/UeAH/1HgB/9N4Af/VdwH/1HkC/+edIPv4xkJs+rc4APLLRQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/+oEA//h/AP/5gFX++H70/vZ8//32e//99Hv//fN4//7xeP/88Hb/++50//rtc//67HL/+epw//jpb//4527/+OZt//fka//342r/9+Jp//bfZ//23mb/9t5k//XcYv/12mH/9dlg//baXf/Otnb/PTbW/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//84OP3/h4r6/x0e/v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8PCvD/hVdz/9uOGv/cjhT/240T/9qLEv/ZiRD/2YgP/9mHDv/Zhg3/2IQL/9iCCv/XgQn/1n8H/9V+Bv/WfAX/1noD/9V5Av/UeAH/1HgB/9R4Af/UeAH/1HkB/9Z4Av/TdwD/3IwR/PK3Nm3mmhwA+ctIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP/6ggD/+YAA//mBVP75f/T+933//vZ7//70fP/99Hn//vJ4//zwdv/873X/++50//vscv/663H/+epw//jobv/45m3/+OVs//jka//442r/9+Bo//beZv/23mX/9t1j//XbYf/321//3sRu/1JJyf8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//JSX+/7u3+P/y9fb/kJL4/w4O//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8ZEOX/mWNf/92PFf/bjhT/2owT/9mKEf/ZiRD/2YgP/9mHDv/YhQz/2IML/9iCCv/XgAj/1n8H/9d9Bv/XewT/1XkC/9R4Af/UeAH/1HgB/9R4Af/VeAH/1HcC/9J4Af/Uggf96aYncM5+AgD/xkYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9faTAP/5hAD8+IpL//mB8f75fv/+93z//fZ7//z2eP/+83j//PF3//zwdv/77nT/++1z//vscv/56nD/+ehv//nnbv/55m3/+OVs//jjav/34Wj/9uBm//bfZf/23mT/9t1h/+fPaf9rX7r/BAP9/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xcW//+jo/f/9/f1//f49v/w7Pj/e3r4/wgI/v8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8mGdf/q29L/92PE//bjBT/2ooT/9iIEf/Yhw//2YcO/9iFDP/YhAv/2IML/9eBCf/WgAj/1n4G/9V8BP/UegP/1HkC/9R4Af/UeAH/1HgB/9d4AP/ReAL/z3cE/9V9Bf/klBl5zncAAPSpLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD0/a4A/faKAPv3k0T+94fv/vh///73ff/993r//PV6//7ze//98nj//PB2//zvdf/77nT/++xy//rrcf/56XD/+ehv//nnbv/55Wz/+eRr//fiaf/24Wf/9uBm//ffZP/u12f/gHOs/woJ+P8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8NDPn/i4rz/+7x+P/y9/f/9vb2//f3+P/l4dz/XFDG/wMC+/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//82I8b/uHc8/92OE//aixT/2YkS/9iIEP/Yhw7/2YYN/9iFDP/Zgwv/2IIK/9aACP/Vfwf/1X0F/9R7BP/UeQL/1HgB/9R4Af/UeAH/1ngA/9F4Av/QeAP/1XoC/9+ECn7TeAAA5o0RAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//6QD485EA+fadOvv2i+r/+YD///h+//34ev/99Hz//vJ9//7zef/88Xf//PB2//vudP/77XP/++xy//rqcP/56G//+edu//nmbf/45Wz/+ONq//fiaP/34Wb/9d5m/5eJn/8SEPT/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//BgX5/29cr//m3L7/9fn2//f29f/69Pj/9Pb5//Tjtf/PoVv/Sje//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//9GLrX/xX8u/9yNEv/aihP/2YkR/9mID//Zhw7/2YYN/9iEDP/Ygwr/14EJ/9aACP/Wfgb/1XwE/9R6A//UeQL/1HgB/9R4Af/TeQH/03gB/9N5Af/UeQH/23sBftd5AADdfQIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA////APLzlQDz86YX+PqFuf76gP//+X7//vd9//31ff/+9Hz//fR5//3yeP/88Xf//O91//vudP/77HL/++px//rpcP/56G//+eZt//jlbP/45Gr/+ONo//jiZv+wn5L/Hhvs/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wEB/v9ZR7n/2q5R/+vMdf/17tD/9/by//f19v/07NH/6cRv/+q0Nv/ClFj/NyrQ/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wIB/f9bO5//zoUj/9uMEv/aihL/2okQ/9mHDv/Yhg3/2IUM/9iEC//Xggr/14EJ/9Z/B//UfQX/1HsE/9R5Av/UeAH/1HgB/9F5Af/UeAH/1HoA/9J5Av/aewd+03cBAN5/DAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD59cIA8fqZAN735gL2+4R5/fmB/f/6f//+94H//vd8//32ef/99Xr//fJ4//zxd//88Hb//O91//rtc//77HL/+upw//nob//5527/+eZt//jla//55Wj/wrGJ/y4q4/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//RTjJ/86mXf/vv0D/6rpG/+bDaP/v1I3/6tSN/+bCY//mtD//5rI7/+iyNv+xh2b/KB7c/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wgF9/9vR4n/04gc/9uLEf/ZiRD/2IgP/9iHDv/Zhg3/2IUM/9eDCv/XgQn/14AI/9V+Bv/VewT/1HoD/9R5Av/UeAH/0nkB/9V4Af/UeQD/0XoH/9iFHnbMdgQA4ZAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLajADz/6oA+PGAAPT2kkv8+YLt//qA//74gv/+933//vd6//31ev/983n//PJ4//zxd//873X/++50//vtc//663H/+elw//nob//55m3/++hq/9LDgP8+Odn/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//zMq1//BnWn/8MFD/+u9RP/su0L/7bk//+i4Pv/kuD3/6Lg6/+W2O//ltDv/57M4/+exN/+fenT/GRPp/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//w4J8P+BU3X/2IoW/9qKEP/ZiA//2IcO/9mHDv/YhQz/14QL/9eCCv/XgAj/1n8H/9V9Bf/VewT/1HkC/9R4Af/TeAH/1HkB/9N4Af/Qegv22JQ7W8VzBwD0v3sAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+/fCAP///wD69owA+vWhFf77gLT++oH//fmC///3gP//93z//vZ7//31ef/983j//PF3//zwdv/873T/++1z//vscv/56nD/+ehv//vpbf/j0nn/VlDM/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8iHOX/rZF4/+/CSP/wwET/6L1H/+e8Rv/qu0H/5blC/+u3QP/ttj//6LRA/+i1Ov/oszr/57I4/+OuOf+JaIf/Dwvy/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//xcP5v+XYVz/2osR/9mJEP/ZiA//2IcO/9mGDf/YhQz/2IMK/9iBCf/Wfwf/1n4G/9Z8Bf/VegP/1XkC/9Z4Af/TeQL/0ncE/9B7DenSmUY7wXgVAP///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//XOAP/4qAD/+P8B/PeOX/35g/D8+oL//viC//73fv/99nz//fZ4//z0eP/88nj//PF3//zwdP/87nP/++xy//rrcf/662//7Nx2/25mvv8FBfz/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//FhLv/5mAiv/rw0r/7cNJ/+zBR//pv0b/6L1F/+m8Q//oukL/6rhA/+q3P//ptj//6LU9/+i0O//nsjn/57E3/92pPf9zWJr/CAb4/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//yYY1v+oa0r/24oR/9qI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//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//9AN9L/z7Fq//DMUP/uyU//7sdN/+3GTP/uxUv/7cRK/+zBSP/swEf/7L9G/+u9RP/qvEP/6rpB/+m4QP/ptz//6bc9/+m2PP/otDr/57I5/+awN//mrzb/568z/6+EY/8jGuD/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//BwX3/29Ghf/Uhhb/2YgO/9mHDv/YhQz/2IQL/9eCCf/XgAj/1n8H/9V9Bf/VewT/z3wQ7MyOOlKGFwAA/deaAJ5rNwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//+cAPv52AD0+tEA/98AAPj0pCP69pCn+/iF+/v5ff/+93v//vR///3yfv/+9nb/3NSH/0pG1/8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//LSbg/72hev/xzlP/78tS/+7JT//uyE7/7sdN/+7FS//uxEr/7cJJ/+3BSP/sv0b/675F/+q8Q//qu0L/6rlB/+q3P//qtz7/6rc8/+i1O//nszr/57E4/+ewN//mrzX/5a00/5hyeP8XEev/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//EArt/4hWaf/YhxD/2ogO/9mGDf/YhQz/2IIK/9eBCf/XgAj/1X4G/9F8C/7HgymU1bOAC9SkYADnvoAA//XMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA+v3YAPX6uAD3+sUA+fBeAP32qib79JeN+veE5f36ef/+93j///d5/+nigv9fXMv/AgL+/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//x4a6v+rk4j/8c9W//DNVf/vy1P/78pQ/+/JT//ux03/7sZM/+7FS//tw0r/7cFI/+3AR//sv0b/671E/+u8Q//qukL/6rhA/+q4P//qtz3/6bU8/+izOv/nsjn/57A3/+avNv/mrjT/4qo3/4Njif8NCvT/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//HBLh/5lgVf/Zhw//2YcO/9eFDf/Ygwv/2YII/9iACP/Vfwj/1oUWxtmXOSfXgxUArAAAAOjKlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD8/9gA/P/AAPr3tAD8+sMA5dZIAPbztAv19JZZ+vaGv/35e/n07nz9d3S//wYF/P8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8SD/P/l4OX//DPWf/yz1b/8M1W//DMVP/wy1H/78lP/+/ITv/ux03/7sVL/+3ESv/swkn/7MFI/+vAR//rvkX/6r1E/+q7Qv/pukH/6Lg//+i3Pv/otj3/6LU7/+ezOf/msTj/5bA3/+WvNv/nrjP/3aY6/21Snf8GBPr/AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//JxjU/6pp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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/wAAAP8AAAD/EQAA/5wAAP/+AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//Fxby+6mZlvf33GL999pg//PZYP/z2F//9NZd//PVW//z1Fn/8dJY//HRV//xz1b/8M5V/+7NU//tzFL/7cpQ/+/ITf/vx0z/7cVL/+3ESv/tw0n/7MFI/+u/Rv/qvkX/671E/+q7Qv/pukD/6bg//+m4Pv/ptj3/6LQ8/+eyOv/msTj/5rA3/+avNv/mrTT/5awz/+WrMf/hpzL/gWCI/wwJ9P8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP/gAAD/SwAA/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAP8AAAD/AAAA/woAAP+EAAD/+AAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA/+w0MuWA69p1XvLcdqXv2HLk8dln7fLZYPT0113/9NVd//TTXf/x0ln/8NNW//DQV//xzVb/785T/+7NU//wyVL/8chO/+/ITP/uxkz/7sVL/+3ESv/swkj/68BH/+m+Rf/rvUT/67xD/+m6Qf/puUD/6bc//+m2Pv/otDz/6LM6/+eyOf/msTj/5q82/+auNf/lrDP/5Ksy/+WpMf/aoTn/bVCb/wcF+f8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP/QAAD/NgAA/wAAAP8AAAD/AAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/wAAAP8EAAD/bQAA//AAAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP/1AAD/ewAA/wePgpcA4t+2EungmC/z3XVE8NlpWuzVcq3v1Gva8tNh6PDRXv7w0Vn/89FV//XPVf/x0FH/8c5P//TJVP/wyFL/7chN/+7HTf/uxUv/7cRK/+3DSf/swUj/6r9G/+u+Rf/svUT/6rtC/+q5Qf/quED/6bc//+i1Pf/otDv/6LM6/+axOP/msDf/5q82/+atNP/lrDP/5aoy/+eqLv/UnDz/WkKs/wIB/f8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP+9AAD/JwAA/wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAP8AAAD/AAAA/1QAAP/nAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//AAA/5MAAP8OBwb8AP//WQDl3KAA59uOAPHadAD/1gAA5t+uEfHffyjx12Y+6NJ6jejTbMDt01vR8c5a7fLNVv/tz1D/6s1Q/+/JUv/wyE//7sdN/+3GTP/txUv/7cRK/+zCSP/rwEf/679G/+u+Rf/rvEP/6rpB/+m5QP/ptz//6LY+/+m1PP/oszr/57I5/+awN//mrzb/5a41/+StM//kqzL/5qgy/+ioL//JlUX/QzK//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP+qAAD/GQAA/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/wAAAP85AAD/1wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP+rAAD/GgAA/wAAAP8AAAD/AP//7gD//qwAydDqAOLcugDo25wA8N19APLTTQDc6+kF7OqJFOfYaCHoz3Fi8M1g1vLMV//szVP/78tS//LIUf/vyE7/7cZM/+3FS//txEr/7MNJ/+zBSP/swEf/675F/+q9RP/qu0L/6bpB/+m4QP/otj7/6bY9/+i1O//nszn/5rE4/+awN//lrjX/5K01/+KqN//kqTP/5akw/+WqLP+5iVT/MiXR/wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//wAAP+PAAD/CAAA/wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP8AAAD/AAAA/zQAAP/TAAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD//wAA//8AAP//AAD/xQAA/yoAAP8AAAD/AAAA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AAAAAAAAAAAAAAAAAAAAAAAAAAD/AAAA/wAAAP8AAAD/AAAA/wAAAP8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/wAAAP8AAAD/AAAA/wAAAP8AAAD/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8B////AB////wP///////+Af///gAP///4B////////AB///AAB///8AP///////gAf//AAAP//+AB///////4AD//AAAD///AAP//////8AAf/gAAA///gAB//////+AAD/gAAAP//wAAf//////AAA/wAAAD//8AAD//////gAADAAAAA//+AAAf/////wAAAAAAAAP//AAAD/////8AAAAAAAAD//gAAAf////+AAAAAAAAA//wAAAD/////AAAAAAAAAH/4AAAAf////gAAAAAAAAB/+AAAAH////4AAAAAAAAAA/AAAAB////+AAAAAAAAAABgAAAAf////gAAAAAAAAAAAAAAAH////4AAAAAAAAAAAAAAAB////+AAAAAAAAAAAAAAAAf////gAAAAAAAAAAAAAAAH////8AAAAAAAAAAAAAAAD/////gAAAAAAAAAAAAAAA/////8AAAAAAAAAAAAAAA/////+AAAAAAAAAAAAAAAP/////AAAAAAAAAAAAAAAH/////gAAAAAAAAAAAAAAAf////wAAAAAAAAAAAAAAAD////8AAAAAAAAAAAAAAAA////+AAAAAAAAAAAAAAAAH////gAAAAAAAAAAAAAAAB////wAAAAAAAAAAAAAAAAP///8AAAAAAAAAAAAAAAAB////AAAAAAAAAAAAAAAAAf///wAAAAAAAAAAAAAAAAH///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////AAAAAAAAAAAAAAAAAP///wAAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAA////gAAAAAAAAAAAAAAAAP///4AAAAAAAAAAAAAAAAD///+AAAAAAAAAAAAAAAAA////wAAAAAAAAAAAAAAAAP///+AAAAAAAAAAAAAAAAH////gAAAAAAAAAAAAAAAB////8AAAAAAAAAAAAAAAA/////AAAAAAAAAAAAAAAAP////4AAAAAAAAAAAAAAAH/////gAAAAAAAAAAAAAAD/////4AAAAAAAAAAAAAAB/////8AAAAAAAAAAAAAAA/////+AAAAAAAAAAAAAAAH/////AAAAAAAAAAAAAAAA/////wAAAAAAAAAAAAAAAH////4AAAAAAAAAAAAAAAB////+AAAAAAAAAAAAAAAAf////gAAAAAAAAAAAAAAAH////4AAAACAAAAAAAAAAB////+AAAAB8AAAAAAAAAAf////gAAAA/+AAAAAAAAAH////4AAAAf/gAAAAAAAAB/////AAAAH/8AAAAAAAAA/////8AAAH//AAAAAAAAAf/////AAAB//wAAAAEAAAP/////4AAA//8AAAADgAAD//////AAAf//AAAAP8AAB//////4AAP//wAAAH/AAA//////+AAD//8AAAH/4AAf//////4AD///AAAD//gAP//////+AA///wAAH//4AH///////wAf//+AAD///AB///////+AP///wAH///4A////////wH///+AD////Af///////8D//////////wP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8='
+    $icoPath = "$env:ProgramData\RemoveWindowsAI.ico"
+    $bytes = [Convert]::FromBase64String($removeAiIconBase64)
+    [System.IO.File]::WriteAllBytes($icoPath, $bytes)
+
+    if ($Desktop) {
+        Write-Status -msg 'Creating shortcut to run RemoveWindowsAI script -> [DESKTOP]...' 
+        #get users correct desktop path
+        $desktopPath = [Environment]::GetFolderPath('Desktop')
+        #$desktopPathPublic = [Environment]::GetFolderPath('CommonDesktopDirectory')
+        $WshShell = New-Object -comObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut("$desktopPath\RemoveWindowsAI.lnk")
+        $Shortcut.TargetPath = $psPath
+        $Shortcut.Arguments = "-ep bypass -c `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))`""
+        $Shortcut.IconLocation = $icoPath
+        $Shortcut.Save()
+        #runasadmin
+        $bytes = [System.IO.File]::ReadAllBytes($Shortcut.FullName)
+        $bytes[0x15] = $bytes[0x15] -bor 0x20
+        [System.IO.File]::WriteAllBytes($Shortcut.FullName, $bytes)
+    }
+
+    if ($Start) {
+        Write-Status -msg 'Creating shortcut to run RemoveWindowsAI script -> [START MENU]...'
+        $startPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs" #"$env:ProgramData\Microsoft\Windows\Start Menu\Programs"
+        $WshShell = New-Object -comObject WScript.Shell
+        $Shortcut = $WshShell.CreateShortcut("$startPath\RemoveWindowsAI.lnk")
+        $Shortcut.TargetPath = $psPath
+        $Shortcut.Arguments = "-ep bypass -c `"& ([scriptblock]::Create((irm 'https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1')))`""
+        $Shortcut.IconLocation = $icoPath
+        $Shortcut.Save()
+        #runasadmin
+        $bytes = [System.IO.File]::ReadAllBytes($Shortcut.FullName)
+        $bytes[0x15] = $bytes[0x15] -bor 0x20
+        [System.IO.File]::WriteAllBytes($Shortcut.FullName, $bytes)
+    }
 }
 
 #===============================================================================================================================
@@ -2886,8 +3247,8 @@ function install-paint {
     
     #create start shortcut
     $WshShell = New-Object -comObject WScript.Shell
-    $Shortcut = $WshShell.CreateShortcut('C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Paint.lnk')
-    $Shortcut.TargetPath = 'C:\Windows\System32\mspaint.exe'
+    $Shortcut = $WshShell.CreateShortcut("$env:programdata\Microsoft\Windows\Start Menu\Programs\Paint.lnk")
+    $Shortcut.TargetPath = "$env:windir\System32\mspaint.exe"
     $Shortcut.Save()
 
 }
@@ -2961,8 +3322,8 @@ function install-snipping {
    
 
     $WshShell = New-Object -comObject WScript.Shell
-    $Shortcut = $WshShell.CreateShortcut('C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Accessories\SnippingTool.lnk')
-    $Shortcut.TargetPath = ('C:\Windows\System32\SnippingTool.exe')
+    $Shortcut = $WshShell.CreateShortcut("$env:programdata\Microsoft\Windows\Start Menu\Programs\Accessories\SnippingTool.lnk")
+    $Shortcut.TargetPath = ("$env:windir\System32\SnippingTool.exe")
     $Shortcut.Save()
 
 }
@@ -3063,8 +3424,8 @@ function install-notepad {
 
     #create start shortcut
     $WshShell = New-Object -comObject WScript.Shell
-    $Shortcut = $WshShell.CreateShortcut('C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Notepad.lnk')
-    $Shortcut.TargetPath = 'C:\Windows\System32\Notepad.exe'
+    $Shortcut = $WshShell.CreateShortcut("$env:programdata\Microsoft\Windows\Start Menu\Programs\Notepad.lnk")
+    $Shortcut.TargetPath = "$env:windir\System32\Notepad.exe"
     $Shortcut.Save()
 
 }
@@ -3326,7 +3687,7 @@ if ($nonInteractive) {
     }
     if ($AllOptions) {
         Disable-Registry-Keys 
-        #Install-NOAIPackage
+        Install-NOAIPackage
         Disable-Copilot-Policies 
         Remove-AI-Appx-Packages 
         Remove-Recall-Optional-Feature 
@@ -3334,14 +3695,35 @@ if ($nonInteractive) {
         Remove-AI-Files 
         Hide-AI-Components 
         Disable-Notepad-Rewrite 
-        Remove-Recall-Tasks 
-
+        Remove-WindowsAI-Tasks 
+        Update-Cleanup-Check
     }
     else {
+        $allFunctions = @(
+            'DisableRegKeys' 
+            'Prevent-AI-Package-Reinstall' 
+            'DisableCopilotPolicies' 
+            'RemoveAppxPackages' 
+            'RemoveRecallFeature' 
+            'RemoveCBSPackages' 
+            'RemoveAIFiles' 
+            'HideAIComponents'
+            'DisableRewrite'
+            'RemoveWindowsAITasks' 
+            'UpdateCleanupCheck' 
+        )
+        #remove excluded options from the array
+        $activeOptions = if ($ExcludeOptions) {
+            $allFunctions | Where-Object { $Options -notcontains $_ }
+        }
+        else {
+            $Options
+        }
+
         #loop through options array and run desired tweaks
-        switch ($Options) {
+        switch ($activeOptions) {
             'DisableRegKeys' { Disable-Registry-Keys }
-            #'Prevent-AI-Package-Reinstall' { Install-NOAIPackage }
+            'Prevent-AI-Package-Reinstall' { Install-NOAIPackage }
             'DisableCopilotPolicies' { Disable-Copilot-Policies }
             'RemoveAppxPackages' { Remove-AI-Appx-Packages }
             'RemoveRecallFeature' { Remove-Recall-Optional-Feature }
@@ -3349,7 +3731,7 @@ if ($nonInteractive) {
             'RemoveAIFiles' { Remove-AI-Files }
             'HideAIComponents' { Hide-AI-Components }
             'DisableRewrite' { Disable-Notepad-Rewrite }
-            'RemoveRecallTasks' { Remove-Recall-Tasks }
+            'RemoveWindowsAITasks' { Remove-WindowsAI-Tasks }
             'UpdateCleanupCheck' { Update-Cleanup-Check }
         }
     }
@@ -3376,7 +3758,7 @@ else {
         'Remove-AI-Files'                = 'Removes AI-related files from SystemApps, WindowsApps, and other system directories. Also removes machine learning DLLs and Copilot installers.'
         'Hide-AI-Components'             = 'Hides AI components in Windows Settings by modifying the SettingsPageVisibility policy to prevent user access to AI settings.'
         'Disable-Notepad-Rewrite'        = 'Disables the AI Rewrite feature in Windows Notepad through registry modifications and group policy settings.'
-        'Remove-Recall-Tasks'            = 'Removes Recall-related scheduled tasks from the Windows Task Scheduler to prevent AI data collection processes from running.'
+        'Remove-WindowsAI-Tasks'         = 'Removes Windows AI scheduled tasks from Task Scheduler to prevent AI data collection processes from running.'
         'Update-Cleanup-Check'           = 'Creates a silent scheduled task to run at log-on to check if Windows has been updated... if it has then the script will cleanup newly installed AI features'
     }
 
@@ -3402,7 +3784,7 @@ else {
     $mainGrid.RowDefinitions.Add($contentRow) | Out-Null
 
     $toggleRow = New-Object System.Windows.Controls.RowDefinition
-    $toggleRow.Height = [System.Windows.GridLength]::new(130) 
+    $toggleRow.Height = [System.Windows.GridLength]::new(165) 
     $mainGrid.RowDefinitions.Add($toggleRow) | Out-Null
 
     $bottomRow = New-Object System.Windows.Controls.RowDefinition
@@ -3514,7 +3896,7 @@ else {
         'Remove-AI-Files'               
         'Hide-AI-Components'            
         'Disable-Notepad-Rewrite'       
-        'Remove-Recall-Tasks'
+        'Remove-WindowsAI-Tasks'
         'Update-Cleanup-Check'          
     )
 
@@ -3630,7 +4012,6 @@ else {
     #add switches for backup and revert modes
     function Add-iOSToggleToUI {
         param(
-            [Parameter(Mandatory = $true)]
             [System.Windows.Controls.Panel]$ParentControl,
             [bool]$IsChecked = $false,
             [string]$Name = 'iOSToggle'
@@ -3949,6 +4330,60 @@ else {
             [System.Windows.MessageBox]::Show($description, 'Backup Mode', [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
         })
 
+  
+    $row3 = New-Object System.Windows.Controls.RowDefinition
+    $row3.Height = [System.Windows.GridLength]::Auto
+    $toggleGrid.RowDefinitions.Add($row3) | Out-Null
+
+    $togglePanel3 = New-Object System.Windows.Controls.DockPanel
+    $togglePanel3.HorizontalAlignment = [System.Windows.HorizontalAlignment]::Left
+    $togglePanel3.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
+    $togglePanel3.Margin = New-Object System.Windows.Thickness(0, 10, 0, 0)
+    $togglePanel3.LastChildFill = $false
+    [System.Windows.Controls.Grid]::SetRow($togglePanel3, 2)
+
+    $desktopShortcutCheckbox = New-Object System.Windows.Controls.CheckBox
+    $desktopShortcutCheckbox.Content = 'Desktop Shortcut'
+    $desktopShortcutCheckbox.FontSize = 14
+    $desktopShortcutCheckbox.Foreground = [System.Windows.Media.Brushes]::White
+    $desktopShortcutCheckbox.Margin = New-Object System.Windows.Thickness(0, 0, 20, 0)
+    $desktopShortcutCheckbox.VerticalAlignment = 'Center'
+    $desktopShortcutCheckbox.IsChecked = $false
+    [System.Windows.Controls.DockPanel]::SetDock($desktopShortcutCheckbox, 'Left')
+    $togglePanel3.Children.Add($desktopShortcutCheckbox) | Out-Null
+
+    $startMenuShortcutCheckbox = New-Object System.Windows.Controls.CheckBox
+    $startMenuShortcutCheckbox.Content = 'Start Menu Shortcut'
+    $startMenuShortcutCheckbox.FontSize = 14
+    $startMenuShortcutCheckbox.Foreground = [System.Windows.Media.Brushes]::White
+    $startMenuShortcutCheckbox.Margin = New-Object System.Windows.Thickness(0, 0, 10, 0)
+    $startMenuShortcutCheckbox.VerticalAlignment = 'Center'
+    $startMenuShortcutCheckbox.IsChecked = $false
+    [System.Windows.Controls.DockPanel]::SetDock($startMenuShortcutCheckbox, 'Left')
+    $togglePanel3.Children.Add($startMenuShortcutCheckbox) | Out-Null
+
+    $shortcutInfoButton = New-Object System.Windows.Controls.Button
+    $shortcutInfoButton.Content = '?'
+    $shortcutInfoButton.Width = 25
+    $shortcutInfoButton.Height = 25
+    $shortcutInfoButton.FontSize = 12
+    $shortcutInfoButton.FontWeight = 'Bold'
+    $shortcutInfoButton.Background = [System.Windows.Media.Brushes]::DarkBlue
+    $shortcutInfoButton.Foreground = [System.Windows.Media.Brushes]::White
+    $shortcutInfoButton.BorderBrush = [System.Windows.Media.Brushes]::Transparent
+    $shortcutInfoButton.BorderThickness = 0
+    $shortcutInfoButton.VerticalAlignment = 'Center'
+    $shortcutInfoButton.Cursor = 'Hand'
+    [System.Windows.Controls.DockPanel]::SetDock($shortcutInfoButton, 'Right')
+    $shortcutInfoButton.Template = [System.Windows.Markup.XamlReader]::Parse($revertInfoTemplate)
+    $shortcutInfoButton.Add_Click({
+            $description = 'Creates a shortcut that runs the latest version of this script from GitHub.'
+            [System.Windows.MessageBox]::Show($description, 'Shortcut Options', [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
+        })
+    $togglePanel3.Children.Add($shortcutInfoButton) | Out-Null
+
+    $toggleGrid.Children.Add($togglePanel3) | Out-Null
+
     $togglePanel2.Children.Add($backupInfoButton) | Out-Null
     $toggleGrid.Children.Add($togglePanel2) | Out-Null
     # ensure that backup mode and revert mode arent both selected at the same time (cant believe i have to do this....)
@@ -4194,7 +4629,7 @@ else {
                 }
             }
     
-            if ($selectedFunctions.Count -eq 0) {
+            if ($selectedFunctions.Count -eq 0 -and !$desktopShortcutCheckbox.IsChecked -and !$startMenuShortcutCheckbox.IsChecked) {
                 $progressWindow.Close()
                 [System.Windows.MessageBox]::Show('No options selected.', 'Nothing to Process', [System.Windows.MessageBoxButton]::OK, [System.Windows.MessageBoxImage]::Information)
                 return
@@ -4219,7 +4654,7 @@ else {
                         'Remove-AI-Files' { Remove-AI-Files }
                         'Hide-AI-Components' { Hide-AI-Components }
                         'Disable-Notepad-Rewrite' { Disable-Notepad-Rewrite }
-                        'Remove-Recall-Tasks' { Remove-Recall-Tasks }
+                        'Remove-WindowsAI-Tasks' { Remove-WindowsAI-Tasks }
                         'Update-Cleanup-Check' { Update-Cleanup-Check }
                         'Install-Classic-Photoviewer' { install-classicapps -app 'photoviewer' }
                         'Install-Classic-Mspaint' { install-classicapps -app 'mspaint' }
@@ -4229,6 +4664,13 @@ else {
                     }
             
                     Start-Sleep -Milliseconds 500
+                }
+
+                if ($desktopShortcutCheckbox.IsChecked -or $startMenuShortcutCheckbox.IsChecked) {
+                    $progressText.Text = 'Creating shortcuts...'
+                    $progressWindow.UpdateLayout()
+                    [System.Windows.Forms.Application]::DoEvents()
+                    Create-ScriptShortcut -Desktop:$desktopShortcutCheckbox.IsChecked -Start:$startMenuShortcutCheckbox.IsChecked
                 }
         
                 $progressText.Text = 'Completed successfully!'
@@ -4257,22 +4699,8 @@ else {
                     catch {}
 
                     #set executionpolicy back to what it was
-                    if ($ogExecutionPolicy) {
-                        if ($Global:executionPolicyUser) {
-                            Reg.exe add 'HKCU\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-                        }
-                        elseif ($Global:executionPolicyMachine) {
-                            Reg.exe add 'HKLM\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-                        }
-                        elseif ($Global:executionPolicyWow64) {
-                            Reg.exe add 'HKLM\SOFTWARE\Wow6432Node\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-                        }
-                        elseif ($Global:executionPolicyUserPol) {
-                            Reg.exe add 'HKCU\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-                        }
-                        else {
-                            Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-                        }
+                    if ($Global:ogExecutionPolicy) {
+                        Reg.exe add $($Global:ogExecutionPolicyPath -replace ':', '') /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
                     }
                     Restart-Computer -Force
                 }
@@ -4315,27 +4743,11 @@ try {
 catch {}
 
 #set executionpolicy back to what it was
-if ($ogExecutionPolicy) {
-    if ($Global:executionPolicyUser) {
-        Reg.exe add 'HKCU\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-    }
-    elseif ($Global:executionPolicyMachine) {
-        Reg.exe add 'HKLM\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-    }
-    elseif ($Global:executionPolicyWow64) {
-        Reg.exe add 'HKLM\SOFTWARE\Wow6432Node\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-    }
-    elseif ($Global:executionPolicyUserPol) {
-        Reg.exe add 'HKCU\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-    }
-    else {
-        Reg.exe add 'HKLM\SOFTWARE\Policies\Microsoft\Windows\PowerShell' /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
-    }
+if ($Global:ogExecutionPolicy) {
+    Reg.exe add $($Global:ogExecutionPolicyPath -replace ':', '') /v 'ExecutionPolicy' /t REG_SZ /d $ogExecutionPolicy /f >$null
 }
 
 if (!$nonInteractive) {
     Write-Host 'Done! Press Any Key to Exit...' -ForegroundColor Green
-    $Host.UI.RawUI.ReadKey() *>$null
+    [System.Console]::ReadKey() >$null
 }
-
-exit
