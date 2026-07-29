@@ -63,8 +63,8 @@ $hwnd = [Win32]::GetForegroundWindow()
 
 #Profile Customization
 if ($env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
-
 $Host.UI.RawUI.BackgroundColor = "Black"
+$RegKeyPath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"
 
 # Set Apps to Dark
 Set-ItemProperty -Path $RegKeyPath -Name "AppsUseLightTheme" -Value 0 -Type Dword -Force
