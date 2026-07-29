@@ -1,3 +1,27 @@
+<#
+.SYNOPSIS 
+Onedrive has caused a lot of issues in the past with users accidentally signing in and having their documents automatically transferred over
+
+.DESCRIPTION 
+This script checks for anyone using onedrive on the computer, if no one is then it removes onedrive from the computer
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: 23jrg
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Administrator
+Rollback: Onedrive can be re-installed from the microsoft website if absolutely needed
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
+
 # Get the username of the currently logged-in user
 $CurrentUser = $env:USERNAME
 
