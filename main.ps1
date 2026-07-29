@@ -22,6 +22,7 @@ AI-assisted: no
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
 v1.1 2025-07-29 23jrg: Enable logging
+v1.2 2025-07-29 23jrg: Changed execution policy as there were errors with running multiple processes
 #>
 
 # Enable logging
