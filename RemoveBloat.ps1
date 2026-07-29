@@ -1,4 +1,26 @@
-#1/2 debloat scripts that are run when the Impeller is plugged into a computer, sourced from https://github.com/andrew-s-taylor/public
+<#
+.SYNOPSIS 
+This script removes bloat and adware from windows
+
+.DESCRIPTION 
+This is the first of two debloat scripts that are run when the Impeller is plugged into a computer, sourced from https://github.com/andrew-s-taylor/public
+
+.PARAMETER
+No parameters are accepted as this is a manual tool rather than run on a schedule
+
+.NOTES
+Author: Andrew Taylor
+Created: 2026
+Ticket: General ticket
+Risk tier: Low
+Targets: Windows 7/10/11 workstations; single computer
+Requires: Local Administrator
+Rollback: Not required
+AI-assisted: no
+
+.CHANGELOG
+V1.0 2025-07-29 23jrg Complience update
+#>
 
 
 <#
