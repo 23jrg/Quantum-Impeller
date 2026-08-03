@@ -4753,5 +4753,5 @@ if ($Global:ogExecutionPolicy) {
 
 if (!$nonInteractive) {
     Write-Host 'Done! Press Any Key to Exit...' -ForegroundColor Green
-    [System.Console]::ReadKey() >$null
+
 }
