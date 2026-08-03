@@ -24,6 +24,7 @@ V1.0 2026-07-29 23jrg Complience update
 v1.1 2026-07-29 23jrg: Enable logging
 v1.2 2026-07-29 23jrg: Changed execution policy as there were errors with running multiple processes
 v1.3 2026-07-29 23jrg: Changed execution policy again
+v1.4 2026-08-03 23jrg: Check for and remove old LogInactiveOff files
 #>
 
 # Enable logging
@@ -204,6 +205,8 @@ $CaffeineShortcut.Save()
 }
 
 # Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
+Remove-Item -Path "C:\Kick-Inactive-Users-main" -Force;
+Remove-Item -Path "C:\LogInactiveOff" -Force;
 curl -o C:\24jrg.zip https://github.com/23jrg/Kick-Inactive-Users/archive/refs/heads/main.zip;
 tar -xf C:\24jrg.zip -C C:\
 ren c:\Kick-Inactive-Users-main LogInactiveOff
