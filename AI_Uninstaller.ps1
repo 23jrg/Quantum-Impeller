@@ -21,6 +21,7 @@ AI-assisted: no
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
 v1.1 2025-07-29 23jrg: Reviewed and merged the latest build with this one
+v1.2 2025-08-03 23jrg: Commented out wevtutil command that disabled AI logs
 #>
 
 param(
