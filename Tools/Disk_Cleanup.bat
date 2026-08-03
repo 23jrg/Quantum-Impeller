@@ -19,10 +19,12 @@ Rollback: Storage Sense can be changed in settings
 AI-assisted: no
 
 .CHANGELOG
-V1.0 2025-07-29 23jrg Complience update
+V1.0 2026-07-29 23jrg Complience update
+v1.1 2026-08-03 23jrg: added Dism.exe /online /Cleanup-Image /StartComponentCleanup
 :COMMENT_BLOCK
 
 REM Cleans up system files
+start /wait powershell "dism /online /Cleanup-Image /StartComponentCleanup"
 start /wait powershell "net stop wuauserv;net stop bits"
 start /wait powershell "Remove-Item $env:SystemRoot\SoftwareDistribution\* -Recurse -Force -Verbose -ErrorAction SilentlyContinue"
 start /wait powershell "Remove-Item -Path "$env:TEMP\*" -Recurse -Force -Verbose -ErrorAction SilentlyContinue"
