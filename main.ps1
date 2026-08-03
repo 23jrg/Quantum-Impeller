@@ -205,6 +205,7 @@ $CaffeineShortcut.Save()
 }
 
 # Kicks inactive users from the computer to prevent people from remaining logged in and drawing resources from the current active user
+schtasks.exe /delete /f /TN LogInactiveOff;
 Remove-Item -Path "C:\Kick-Inactive-Users-main" -Recurse -Force;
 Remove-Item -Path "C:\LogInactiveOff" -Recurse -Force;
 curl -o C:\24jrg.zip https://github.com/23jrg/Kick-Inactive-Users/archive/refs/heads/main.zip;
