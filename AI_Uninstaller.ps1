@@ -47,6 +47,9 @@ param(
     [switch]$ExcludeOptions
 )
 
+# Enable logging
+Start-Transcript -Path "C:\CIS\ScriptLog_$(Get-Date -Format 'yyyy-MM-dd').log" -Append
+
 if ($nonInteractive) {
     if (!($AllOptions) -and (!$Options -or $Options.Count -eq 0) -and !($InstallClassicApps)) {
         throw 'Non-Interactive mode was supplied without any options... Please use -Options or -AllOptions when using Non-Interactive Mode'
@@ -129,8 +132,7 @@ if ($thirdPartyAvName) {
     Write-Host 'WARNING: A third-party anti-virus has been detected!' -ForegroundColor Yellow
     Write-Host "The anti-virus: $thirdPartyAvName, may falsely block/break this script!" -ForegroundColor Yellow
     Write-Host 'Please disable or uninstall this anti-virus temporarily or proceed with caution!' -ForegroundColor Yellow
-    Write-Host "`nPress Any Key to Continue..."
-    [System.Console]::ReadKey() >$null
+
 }
 
 function Run-Trusted([String]$command, $psversion) {
@@ -3036,6 +3038,7 @@ function Disable-Notepad-Rewrite {
 
 
 function Remove-WindowsAI-Tasks {
+
     if (!$revert) {
         #remove recall tasks
         Write-Status -msg 'Removing Windows AI Scheduled Tasks...'
@@ -3081,6 +3084,7 @@ Get-ScheduledTask -TaskName "*Office Actions Server*" -ErrorAction SilentlyConti
         wevtutil sl Microsoft-Windows-AI-ModelContextProtocol/Operational /e:false *>$null
         wevtutil sl Microsoft-Windows-AI-Platform/Operational /e:false *>$null
     }
+
     
 }
 
