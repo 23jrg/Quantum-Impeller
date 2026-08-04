@@ -25,6 +25,7 @@ V1.0 2025-07-29 23jrg Complience update
 
 $Exceptions = @(
     "Caffeine",
+	"Outlook",
     "Lightshot",
     "WindowsDefender",
 	"Rustdesk",
