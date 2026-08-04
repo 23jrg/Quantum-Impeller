@@ -4,7 +4,7 @@
 Windows can experience performance issues with many apps registered to start up as the computer turns on and remain running, even when not in use
 
 .DESCRIPTION 
-Experimental script designed to remove startup items and speed up boot time
+Script designed to remove startup items and speed up boot time
 
 .PARAMETER
 No parameters are accepted as this is a manual tool rather than run on a schedule
