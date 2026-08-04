@@ -240,6 +240,88 @@ Remove-AppxPackage -Package $UserPackage.PackageFullName
 $ProvisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -like "*LGElectronics.LGMonitorApp*"}
 Remove-AppxProvisionedPackage -Online -PackageName $ProvisionedPackage.PackageName
 
+#HP killer
+Write-Host "Starting HP Support Assistant removal process..." -ForegroundColor Cyan
+
+# Stop active HP Support Assistant processes and services
+Write-Host "Stopping HP Support Assistant processes and services..." -ForegroundColor Yellow
+$HPProcesses = @("HPSupportAssistant", "HPFeedback", "HPWarranty", "UninstallHPSA")
+foreach ($Process in $HPProcesses) {
+    if (Get-Process -Name $Process -ErrorAction SilentlyContinue) {
+        Stop-Process -Name $Process -Force -ErrorAction SilentlyContinue
+        Write-Host "Stopped process: $Process" -ForegroundColor Green
+    }
+}
+
+$HPServices = @("HPAppHelperService", "HPDiagsCapEngine", "HPSupportSolutionsFrameworkService")
+foreach ($Service in $HPServices) {
+    if (Get-Service -Name $Service -ErrorAction SilentlyContinue) {
+        Stop-Service -Name $Service -Force -ErrorAction SilentlyContinue
+        Write-Host "Stopped service: $Service" -ForegroundColor Green
+    }
+}
+
+# Uninstall Microsoft Store / AppX App version (For all users)
+Write-Host "Checking for Microsoft Store UWP app version..." -ForegroundColor Yellow
+$AppxPackage = Get-AppxPackage -AllUsers -Name "*HPSupportAssistant*"
+if ($AppxPackage) {
+    Write-Host "Found AppX Package: $($AppxPackage.PackageFullName). Removing..." -ForegroundColor Yellow
+    Remove-AppxPackage -AllUsers -Package $AppxPackage.PackageFullName -ErrorAction SilentlyContinue
+    Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -like "*HPSupportAssistant*"} | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
+    Write-Host "Microsoft Store version removed." -ForegroundColor Green
+}
+
+# Execute vendor silent uninstaller (Legacy Desktop app)
+Write-Host "Checking for legacy desktop paths..." -ForegroundColor Yellow
+$UninstallerPaths = @(
+    "${env:ProgramFiles(x86)}\Hewlett-Packard\HP Support Framework\UninstallHPSA.exe",
+    "${env:ProgramFiles(x86)}\HP\HP Support Framework\UninstallHPSA.exe"
+)
+
+foreach ($Path in $UninstallerPaths) {
+    if (Test-Path $Path) {
+        Write-Host "Found uninstaller at $Path. Executing silent removal..." -ForegroundColor Yellow
+        # Launch uninstaller silently and wait for it to complete
+        Start-Process -FilePath $Path -ArgumentList "/s /v/qn UninstallKeepPreferences=FALSE" -Wait -NoNewWindow
+        Write-Host "Uninstaller executed." -ForegroundColor Green
+    }
+}
+
+# Search and destroy via MSI Registry GUIDs (Fallback method)
+Write-Host "Checking registry for remaining MSI instances..." -ForegroundColor Yellow
+$RegPaths = @(
+    "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*"
+)
+$TargetApps = "HP Support Assistant*"
+
+Get-ItemProperty -Path $RegPaths -ErrorAction SilentlyContinue | 
+    Where-Object { $_.DisplayName -like $TargetApps } | 
+    ForEach-Object {
+        $IdentifyingNumber = $_.PSChildName
+        if ($IdentifyingNumber -like "{*}") {
+            Write-Host "Found registry GUID for $($_.DisplayName). Uninstalling..." -ForegroundColor Yellow
+            Start-Process -FilePath "msiexec.exe" -ArgumentList "/x $IdentifyingNumber /qn /norestart" -Wait -NoNewWindow
+            Write-Host "MSI uninstalled successfully." -ForegroundColor Green
+        }
+    }
+
+# Registry and remnants cleanup
+Write-Host "Cleaning up residual registry keys..." -ForegroundColor Yellow
+$RegistryKeysClean = @(
+    "HKLM:\Software\WOW6432Node\HP\HPActiveSupport",
+    "HKLM:\Software\WOW6432Node\Hewlett-Packard\HPActiveSupport"
+)
+foreach ($Key in $RegistryKeysClean) {
+    if (Test-Path $Key) {
+        Remove-Item -Path $Key -Recurse -Force -ErrorAction SilentlyContinue
+        Write-Host "Removed registry key: $Key" -ForegroundColor Green
+    }
+}
+
+Write-Host "HP Support Assistant removal script completed successfully!" -ForegroundColor Cyan
+
+
 #Mcafee killer
 #Silently uninstall McAfee WebAdvisor (Common pre-installed bundle)
 Write-Host "`n[1/4] Checking for McAfee WebAdvisor..." -ForegroundColor Yellow
@@ -251,6 +333,7 @@ if (Test-Path $WebAdvisorPath) {
 } else {
     Write-Host "McAfee WebAdvisor is not present." -ForegroundColor Gray
 }
+
 #Locate registry uninstall strings for standard McAfee Suites (LiveSafe / Total Protection)
 Write-Host "`n[2/4] Searching Registry for main McAfee Product Suites..." -ForegroundColor Yellow
 $RegPaths = @(
