@@ -34,7 +34,9 @@ $Exceptions = @(
     "ClickPaste",
 	"Teams",
 	"Zoom",
-	"Webex"
+	"Webex",
+	"Stage",
+	"Agent"
 )
 
 Write-Host "Starting systemic startup program cleanup..." -ForegroundColor Cyan
