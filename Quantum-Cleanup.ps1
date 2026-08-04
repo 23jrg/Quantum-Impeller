@@ -21,7 +21,11 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
+v1.1 2026-08-04 23jrg: Added logging
 #>
+
+# Enable logging
+Start-Transcript -Path "C:\23jrg\CleanupScriptLog_$(Get-Date -Format 'yyyy-MM-dd').log" -Append
 
 # Repair routines to be run before residual impeller files are removed, 
 chkdsk /scan /perf;sfc /scannow;dism /online /cleanup-image /restorehealth;
@@ -53,6 +57,9 @@ Remove-MpPreference -ExclusionPath "C:\24jrg";
 
 # Requests the script to immediately stop if an error occurs, it will try again later if an error occurs
 $ErrorActionPreference = 'Stop'
+
+# Stops Transcript as the log is about to be deleted
+Stop-Transcript
 
 # Enforces the script to immediately stop if an error occurs, it will try again later if an error occurs
 $PSNativeCommandUseErrorActionPreference = $true
