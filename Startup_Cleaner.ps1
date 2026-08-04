@@ -24,6 +24,8 @@ V1.0 2025-07-29 23jrg Complience update
 V1.1 2026-08-04 23jrg: Added Outlook to the list of exclusions
 #>
 
+Start-Transcript -Path "C:\23jrg\StartupScriptLog_$(Get-Date -Format 'yyyy-MM-dd').log" -Append
+
 $Exceptions = @(
     "Caffeine",
 	"Outlook",
