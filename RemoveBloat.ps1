@@ -241,6 +241,19 @@ $ProvisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object {$_.Disp
 Remove-AppxProvisionedPackage -Online -PackageName $ProvisionedPackage.PackageName
 
 #HP killer
+# Stop the running process if active
+Stop-Process -Name "SysInfoCap" -Force -ErrorAction SilentlyContinue
+
+# Stop and disable the HP System Info HSA Service
+$serviceName = "HP System Info HSA Service"
+$service = Get-Service -Name "HPISVC" -ErrorAction SilentlyContinue
+if ($service) {
+    Stop-Service -Name "HPISVC" -Force -ErrorAction SilentlyContinue
+    Set-Service -Name "HPISVC" -StartupType Disabled
+    Write-Host "HP System Info service disabled." -ForegroundColor Green
+} else {
+    Write-Host "Service HPISVC not found or already removed." -ForegroundColor Yellow
+}
 Write-Host "Starting HP Support Assistant removal process..." -ForegroundColor Cyan
 
 # Stop active HP Support Assistant processes and services
