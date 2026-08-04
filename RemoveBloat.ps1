@@ -241,98 +241,80 @@ $ProvisionedPackage = Get-AppxProvisionedPackage -Online | Where-Object {$_.Disp
 Remove-AppxProvisionedPackage -Online -PackageName $ProvisionedPackage.PackageName
 
 #HP killer
-# Stop the running process if active
-Stop-Process -Name "SysInfoCap" -Force -ErrorAction SilentlyContinue
+Write-Host "Starting Hewlett-Packard software removal process..." -ForegroundColor Cyan
 
-# Stop and disable the HP System Info HSA Service
-$serviceName = "HP System Info HSA Service"
-$service = Get-Service -Name "HPISVC" -ErrorAction SilentlyContinue
-if ($service) {
-    Stop-Service -Name "HPISVC" -Force -ErrorAction SilentlyContinue
-    Set-Service -Name "HPISVC" -StartupType Disabled
-    Write-Host "HP System Info service disabled." -ForegroundColor Green
-} else {
-    Write-Host "Service HPISVC not found or already removed." -ForegroundColor Yellow
-}
-Write-Host "Starting HP Support Assistant removal process..." -ForegroundColor Cyan
-
-# Stop active HP Support Assistant processes and services
-Write-Host "Stopping HP Support Assistant processes and services..." -ForegroundColor Yellow
-$HPProcesses = @("HPSupportAssistant", "HPFeedback", "HPWarranty", "UninstallHPSA")
-foreach ($Process in $HPProcesses) {
-    if (Get-Process -Name $Process -ErrorAction SilentlyContinue) {
-        Stop-Process -Name $Process -Force -ErrorAction SilentlyContinue
-        Write-Host "Stopped process: $Process" -ForegroundColor Green
-    }
-}
-
-$HPServices = @("HPAppHelperService", "HPDiagsCapEngine", "HPSupportSolutionsFrameworkService")
-foreach ($Service in $HPServices) {
-    if (Get-Service -Name $Service -ErrorAction SilentlyContinue) {
-        Stop-Service -Name $Service -Force -ErrorAction SilentlyContinue
-        Write-Host "Stopped service: $Service" -ForegroundColor Green
-    }
-}
-
-# Uninstall Microsoft Store / AppX App version (For all users)
-Write-Host "Checking for Microsoft Store UWP app version..." -ForegroundColor Yellow
-$AppxPackage = Get-AppxPackage -AllUsers -Name "*HPSupportAssistant*"
-if ($AppxPackage) {
-    Write-Host "Found AppX Package: $($AppxPackage.PackageFullName). Removing..." -ForegroundColor Yellow
-    Remove-AppxPackage -AllUsers -Package $AppxPackage.PackageFullName -ErrorAction SilentlyContinue
-    Get-AppxProvisionedPackage -Online | Where-Object {$_.DisplayName -like "*HPSupportAssistant*"} | Remove-AppxProvisionedPackage -Online -ErrorAction SilentlyContinue
-    Write-Host "Microsoft Store version removed." -ForegroundColor Green
-}
-
-# Execute vendor silent uninstaller (Legacy Desktop app)
-Write-Host "Checking for legacy desktop paths..." -ForegroundColor Yellow
-$UninstallerPaths = @(
-    "${env:ProgramFiles(x86)}\Hewlett-Packard\HP Support Framework\UninstallHPSA.exe",
-    "${env:ProgramFiles(x86)}\HP\HP Support Framework\UninstallHPSA.exe"
+#Uninstall Desktop Applications via Registry Paths
+$UninstallPaths = @(
+    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
 )
 
-foreach ($Path in $UninstallerPaths) {
-    if (Test-Path $Path) {
-        Write-Host "Found uninstaller at $Path. Executing silent removal..." -ForegroundColor Yellow
-        # Launch uninstaller silently and wait for it to complete
-        Start-Process -FilePath $Path -ArgumentList "/s /v/qn UninstallKeepPreferences=FALSE" -Wait -NoNewWindow
-        Write-Host "Uninstaller executed." -ForegroundColor Green
-    }
+Write-Host "Scanning registry for HP desktop applications..." -ForegroundColor Yellow
+
+$HPApps = Get-ItemProperty $UninstallPaths | Where-Object {
+    $_.Publisher -like "*HP*" -or 
+    $_.Publisher -like "*Hewlett-Packard*" -or 
+    $_.DisplayName -like "*HP Support Assistant*" -or
+    $_.DisplayName -like "*HP Support Solutions*"
 }
 
-# Search and destroy via MSI Registry GUIDs (Fallback method)
-Write-Host "Checking registry for remaining MSI instances..." -ForegroundColor Yellow
-$RegPaths = @(
-    "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
-    "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*"
-)
-$TargetApps = "HP Support Assistant*"
-
-Get-ItemProperty -Path $RegPaths -ErrorAction SilentlyContinue | 
-    Where-Object { $_.DisplayName -like $TargetApps } | 
-    ForEach-Object {
-        $IdentifyingNumber = $_.PSChildName
-        if ($IdentifyingNumber -like "{*}") {
-            Write-Host "Found registry GUID for $($_.DisplayName). Uninstalling..." -ForegroundColor Yellow
-            Start-Process -FilePath "msiexec.exe" -ArgumentList "/x $IdentifyingNumber /qn /norestart" -Wait -NoNewWindow
-            Write-Host "MSI uninstalled successfully." -ForegroundColor Green
+foreach ($App in $HPApps) {
+    if ($App.UninstallString) {
+        Write-Host "Found App: $($App.DisplayName)" -ForegroundColor White
+        
+        # Determine if it uses MSI or an Exe installer
+        if ($App.UninstallString -match "msiexec") {
+            # Standardize MSI silent flags
+            $Args = "/x $($App.PSChildName) /qn /norestart"
+            Write-Host "Running: msiexec.exe $Args" -ForegroundColor Gray
+            Start-Process -FilePath "msiexec.exe" -ArgumentList $Args -Wait -NoNewWindow
+        }
+        else {
+            # Attempt to run native uninstaller silently by guessing common quiet flags
+            $Uninstaller = $App.UninstallString -replace '"', ''
+            $Args = ""
+            
+            if ($Uninstaller -match "exe$") {
+                $Args = "/S /silent /quiet /verysilent" # Common silent flags combined
+            }
+            
+            Write-Host "Running Native Uninstaller: $Uninstaller" -ForegroundColor Gray
+            try {
+                Start-Process -FilePath $Uninstaller -ArgumentList $Args -Wait -NoNewWindow -ErrorAction Stop
+            } catch {
+                Write-Warning "Failed to execute uninstaller for $($App.DisplayName). It may require manual removal."
+            }
         }
     }
+}
 
-# Registry and remnants cleanup
-Write-Host "Cleaning up residual registry keys..." -ForegroundColor Yellow
-$RegistryKeysClean = @(
-    "HKLM:\Software\WOW6432Node\HP\HPActiveSupport",
-    "HKLM:\Software\WOW6432Node\Hewlett-Packard\HPActiveSupport"
-)
-foreach ($Key in $RegistryKeysClean) {
-    if (Test-Path $Key) {
-        Remove-Item -Path $Key -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Host "Removed registry key: $Key" -ForegroundColor Green
+#Remove UWP / Microsoft Store Apps (AppX Packages)
+Write-Host "`nScanning for HP Microsoft Store (AppX) packages..." -ForegroundColor Yellow
+
+$AppxPackages = Get-AppxPackage -AllUsers | Where-Object { $_.PublisherId -like "*HP*" -or $_.Name -like "*Hewlett-Packard*" -or $_.Name -like "*HPSupportAssistant*" }
+
+foreach ($Package in $AppxPackages) {
+    Write-Host "Removing AppX Package: $($Package.Name)" -ForegroundColor White
+    try {
+        Remove-AppxPackage -Package $Package.PackageFullName -AllUsers -ErrorAction Stop
+    } catch {
+        Write-Warning "Could not remove package: $($Package.Name)"
     }
 }
 
-Write-Host "HP Support Assistant removal script completed successfully!" -ForegroundColor Cyan
+#Remove Provisioned AppX Packages (stops them reinstalling on new user profiles)
+Write-Host "`nScanning for Provisioned HP packages..." -ForegroundColor Yellow
+
+$ProvisionedPackages = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -like "*HP*" -or $_.DisplayName -like "*Hewlett-Packard*" }
+
+foreach ($ProvPackage in $ProvisionedPackages) {
+    Write-Host "Removing Provisioned Package: $($ProvPackage.DisplayName)" -ForegroundColor White
+    try {
+        Remove-AppxProvisionedPackage -Online -PackageName $ProvPackage.PackageName -ErrorAction Stop
+    } catch {
+        Write-Warning "Could not remove provisioned package: $($ProvPackage.DisplayName)"
+    }
+}
 
 
 #Mcafee killer
