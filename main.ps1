@@ -72,7 +72,7 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
 #Start-Process powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
-Start-Process powershell.exe "winget upgrade --all --silent --include-unknown;choco upgrade all -y"
+Start-Process powershell.exe "winget upgrade --all --silent --include-unknown --force;choco upgrade all -y"
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\s\winutil.bat"
 
 # Notes down which user launched the script
