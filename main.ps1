@@ -27,6 +27,7 @@ v1.3 2026-07-29 23jrg: Changed execution policy again
 v1.4 2026-08-03 23jrg: Check for and remove old LogInactiveOff files
 v1.5 2026-08-04 23jrg: Added installation of Chocolatey
 v1.6 2026-08-04 23jrg: Commented out installation of Chocolatey and added process to update all apps with winget and chocolatey if it's already on the system
+v1.7 2026-08-04 23jrg: Uncommented startup cleaner
 #>
 
 # Enable logging
@@ -61,7 +62,7 @@ curl -o C:\24jrg.zip https://github.com/Raphire/Win11Debloat/archive/refs/tags/2
 tar -xf C:\24jrg.zip -C C:\23jrg\;
 ren C:\23jrg\Win11Debloat-2026.07.11 win11debloat;
 
-#Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Startup_Cleaner.ps1"
+Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Startup_Cleaner.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\OneDrive_Cleanup.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneLaunch\OneLaunch-Remediation-Script.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\Xephora-Threat-Remediation-Scripts\OneStart\OneStart-Remediation-Script.ps1"
