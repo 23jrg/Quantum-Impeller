@@ -26,7 +26,7 @@ v1.2 2026-07-29 23jrg: Changed execution policy as there were errors with runnin
 v1.3 2026-07-29 23jrg: Changed execution policy again
 v1.4 2026-08-03 23jrg: Check for and remove old LogInactiveOff files
 v1.5 2026-08-04 23jrg: Added installation of Chocolatey
-v1.6 2026-08-04 23jrg: Commented out installation of Chocolatey and added process to update all apps with winget and chocolatey if it's already on the system
+v1.6 2026-08-04 23jrg: Added process to update all apps with winget and chocolatey if it's already on the system
 v1.7 2026-08-04 23jrg: Uncommented startup cleaner
 #>
 
@@ -71,7 +71,7 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\X
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
-#Start-Process powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+Start-Process powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
 Start-Process powershell.exe "winget upgrade --all --silent --include-unknown --force;choco upgrade all -y"
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\s\winutil.bat"
 
