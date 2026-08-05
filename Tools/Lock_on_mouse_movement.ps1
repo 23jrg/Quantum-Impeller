@@ -20,7 +20,28 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
+V1.1 2025-08-05 23jrg: Upgraded script to request elevation automatically and eject all mice
 #>
+
+# Check if the current session is running as Administrator
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+$isAdmin = $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin) {
+    # Relaunch the script with Administrator privileges (-Verb RunAs triggers UAC)
+    $arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    try {
+        Start-Process -FilePath "powershell.exe" -ArgumentList $arguments -Verb RunAs -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "UAC prompt was denied or failed to launch."
+    }
+    # Exit the current, non-elevated script instance
+    Exit
+}
+
+#Disables mouse until it gets plugged in again
+foreach ($dev in (Get-PnpDevice | Where-Object{$_.Class -eq 'Mouse'})) {&'pnputil' /remove-device $dev.InstanceId}
 
 # Load User32.dll for native mouse tracking
 Add-Type -TypeDefinition @"
