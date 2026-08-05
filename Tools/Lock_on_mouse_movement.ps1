@@ -20,7 +20,7 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
-V1.1 2025-08-05 23jrg: Upgraded script to request elevation automatically and eject all mice
+V1.1 2026-08-05 23jrg: Upgraded script to request elevation automatically and eject all mice
 #>
 
 # Check if the current session is running as Administrator
