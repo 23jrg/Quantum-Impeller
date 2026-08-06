@@ -20,6 +20,7 @@ AI-assisted: no
 
 .CHANGELOG
 V1.0 2025-07-29 23jrg Complience update
+V1.1 2026-08-06 23jrg: Adjusted reboot time to more reliably re-install Windows at the end of the script
 :COMMENT_BLOCK
 
 REM Prompts the user to re-launch this script with higher elevation
@@ -50,4 +51,4 @@ TIMEOUT /T 75
 
 start /wait powershell -Command "Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "AllowMUUpdateService" -Value 1;Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "RestartNotificationsAllowed2" -Value 1;Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" -Name "IsExpedited" -Value 1;Set-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU" -Name "NoAutoUpdate" -Value 0;exit"
 
-start powershell -Command "shutdown -r -t 1"
+start powershell -Command "shutdown -r -t 36000"
