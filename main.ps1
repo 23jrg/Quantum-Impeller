@@ -109,14 +109,14 @@ if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:U
 $Host.UI.RawUI.BackgroundColor = "Black"
 
 #Yellow
-$Host.UI.RawUI.ForegroundColor = "DarkYellow"
-$Hex = 0xFF009AC4
-$url = "https://images4.alphacoders.com/101/1014815.png"
+#$Host.UI.RawUI.ForegroundColor = "DarkYellow"
+#$Hex = 0xFF009AC4
+#$url = "https://images4.alphacoders.com/101/1014815.png"
 
 #Blue
-#$Host.UI.RawUI.ForegroundColor = "Blue"
-#$Hex = 0xFFEBA134
-#$url = "https://images4.alphacoders.com/101/1014815.png"
+$Host.UI.RawUI.ForegroundColor = "Blue"
+$Hex = 0xFFEBA134
+$url = "https://4kwallpapers.com/images/wallpapers/dark-abstract-3840x2160-18134.png"
 
 
 $localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
