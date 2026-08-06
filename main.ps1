@@ -30,6 +30,7 @@ v1.6 2026-08-04 23jrg: Added process to update all apps with winget and chocolat
 v1.7 2026-08-04 23jrg: Uncommented startup cleaner
 v1.8 2026-08-06 23jrg: Added compatibility to the auto-update apps funciton
 v1.9 2026-08-06 23jrg: Added waterfox browser installation
+v1.91 2026-08-06 23jrg: Commented chocolatey component
 #>
 
 # Enable logging
@@ -73,8 +74,8 @@ Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\X
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\win11debloat\Win11Debloat.ps1", '-Silent', '-CreateRestorePoint', '-Config', "C:\23jrg\Quantum-Impeller\Win11Debloat-Config.json"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\RemoveBloat.ps1"
 Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\AI_Uninstaller.ps1", '-noninteractive', '-alloptions'
-Start-Process powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
-Start-Process powershell.exe "winget upgrade --all --silent --include-unknown --force --accept-source-agreements;choco install Waterfox -y;choco upgrade all -y"
+#Start-Process powershell.exe "Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))"
+Start-Process powershell.exe "winget upgrade --all --silent --include-unknown --force --accept-source-agreements;winget install waterfox --source winget --force"
 #Start-Process powershell.exe -ArgumentList "-File", "C:\23jrg\Quantum-Impeller\s\winutil.bat"
 
 # Notes down which user launched the script
