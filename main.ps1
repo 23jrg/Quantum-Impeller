@@ -105,11 +105,20 @@ $hwnd = [Win32]::GetForegroundWindow()
 # Profile Customization
 if ($env:USERNAME -eq "jgraham" -or $env:USERNAME -eq "Administrator" -or $env:USERNAME -eq "CISTECH") {
 
-$Host.UI.RawUI.BackgroundColor = "Black"
-$Host.UI.RawUI.ForegroundColor = "DarkYellow"
 
-# Define the online image URL and local save path
+$Host.UI.RawUI.BackgroundColor = "Black"
+
+#Yellow
+$Host.UI.RawUI.ForegroundColor = "DarkYellow"
+$Hex = 0xFF009AC4
 $url = "https://images4.alphacoders.com/101/1014815.png"
+
+#Blue
+#$Host.UI.RawUI.ForegroundColor = "Blue"
+#$Hex = 0xFFEBA134
+#$url = "https://images4.alphacoders.com/101/1014815.png"
+
+
 $localPath = "$env:USERPROFILE\Pictures\online_wallpaper.jpg"
 
 # Download the image from the web
@@ -141,17 +150,14 @@ Set-ItemProperty -Path $RegKeyPath -Name "AppsUseLightTheme" -Value 0 -Type Dwor
 # Set System to Dark
 Set-ItemProperty -Path $RegKeyPath -Name "SystemUsesLightTheme" -Value 0 -Type Dword -Force
 
-# Define the Yellow accent color in hex (AABBGGRR format for registry)
-$yellowHex = 0xFF009AC4
-
 # Update Registry for Personalization Colors
 $registryPath = "HKCU:\Software\Microsoft\Windows\DWM"
-Set-ItemProperty -Path $registryPath -Name "AccentColor" -Value $yellowHex
+Set-ItemProperty -Path $registryPath -Name "AccentColor" -Value $Hex
 Set-ItemProperty -Path $registryPath -Name "ColorPrevalence" -Value 1
 
 # Update User Personalization for the "Yellow" theme color
 $personalizePath = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent"
-Set-ItemProperty -Path $personalizePath -Name "AccentColorMenu" -Value $yellowHex
+Set-ItemProperty -Path $personalizePath -Name "AccentColorMenu" -Value $Hex
 
 # Hide Widgets
 Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\UCPD" -Name "Start" -Value 4
